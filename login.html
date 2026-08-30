@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Login - Controle Financeiro</title>
+  <link rel="stylesheet" href="css/login.css" />
+</head>
+
+<body>
+  <div class="login-page">
+    <div class="login-left">
+      <div class="logo-circle">
+        <svg viewBox="0 0 64 64" aria-hidden="true">
+          <path d="M10 45 L10 32 L18 32 L18 45" />
+          <path d="M26 45 L26 24 L34 24 L34 45" />
+          <path d="M42 45 L42 16 L50 16 L50 45" />
+          <path d="M12 26 L24 16 L34 24 L50 10" />
+          <path d="M44 10 H50 V16" />
+        </svg>
+      </div>
+
+      <h1>Controle<br />Financeiro</h1>
+
+      <div class="accent-line"></div>
+
+      <p class="tagline">
+        Quem controla as finanças,<br />
+        controla o futuro.<br />
+      </p>
+
+      <div class="security-box">
+        <div class="shield-icon">🔒</div>
+        <div>
+          <strong>Seus dados protegidos</strong>
+          <span>com criptografia avançada.</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="login-right">
+      <form class="login-card" onsubmit="entrarConta(); return false;">
+        <div class="form-group">
+          <label for="usuario">Usuário</label>
+          <div class="input-wrap">
+            <span class="input-icon">👤</span>
+            <input id="usuario" name="username" type="text" placeholder="Digite seu usuário" autocomplete="username" />
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="senha">Senha</label>
+          <div class="input-wrap">
+            <span class="input-icon">🔒</span>
+            <input id="senha" name="password" type="password" placeholder="Digite sua senha"
+              autocomplete="current-password" />
+            <button type="button" class="eye-btn" onclick="togglePassword()">👁</button>
+          </div>
+        </div>
+
+        <button class="btn-primary" type="submit">Entrar</button>
+        <button class="btn-secondary" type="button" onclick="cadastrarConta()">Cadastrar</button>
+
+        <p id="loginStatus" class="login-status"></p>
+      </form>
+    </div>
+
+    <div class="login-footer">
+      © 2026 Controle Financeiro. Todos os direitos estão reservados.
+    </div>
+  </div>
+  <script src="js/auth.js"></script>
+  <script>
+    function togglePassword() {
+      const senhaInput = document.getElementById("senha");
+      senhaInput.type = senhaInput.type === "password" ? "text" : "password";
+    }
+  </script>
+</body>
+
+</html>

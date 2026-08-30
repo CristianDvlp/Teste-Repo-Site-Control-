@@ -1,0 +1,10 @@
+{
+  "type": "module",
+  "dependencies": {
+    "@neondatabase/serverless": "latest",
+    "bcryptjs": "latest",
+    "csv-parse": "^6.2.1",
+    "dotenv": "^17.4.2",
+    "jsonwebtoken": "latest"
+  }
+}
