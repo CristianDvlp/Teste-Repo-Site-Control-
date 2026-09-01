@@ -695,6 +695,12 @@ if (typeof filtroOrigem !== 'undefined' && filtroOrigem) {
 
 document.addEventListener('DOMContentLoaded', async () => {
 
+  const logado = await verificarLogin();
+
+  if (!logado) {
+    return;
+  }
+
   if (typeof inicializarFormulario === 'function') {
     inicializarFormulario([]);
   }
