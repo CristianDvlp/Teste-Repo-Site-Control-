@@ -205,6 +205,13 @@ function normalizarLancamento(item, indice = 0) {
     categoria: item.categoria ?? item.Categoria ?? '',
     valor: item.valor ?? item.Valor ?? 0,
     pagamento: item.pagamento ?? item.Pagamento ?? item.FormaPagamento ?? item['Tipo de Pagamento'] ?? '',
+    parcelado: Boolean(item.parcelado),
+    parcelaAtual: item.parcelaAtual ?? item.parcela_atual ?? null,
+    totalParcelas: item.totalParcelas ?? item.total_parcelas ?? null,
+    grupoParcelamento: item.grupoParcelamento ?? item.grupo_parcelamento ?? null,
+    valorTotalCompra: item.valorTotalCompra ?? item.valor_total_compra ?? null,
+    parcelaPaga: item.parcelaPaga ?? item.parcela_paga ?? true,
+    dataPagamento: item.dataPagamento ?? item.data_pagamento ?? null,
     origem: item.origem ?? item.Origem ?? item.ORIGEM ?? 'site'
   };
 }

@@ -6,7 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Teste - Controle Financeiro</title>
 
-  <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" href="css/style.css?v=8" />
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 
@@ -24,6 +24,11 @@
       <button class="sidebar-link active" type="button" data-tab-target="lancamentos">
         <span class="sidebar-icon">📝</span>
         <span class="sidebar-text">Lançamentos</span>
+      </button>
+
+      <button class="sidebar-link" type="button" data-tab-target="parcelamentos">
+        <span class="sidebar-icon">🧾</span>
+        <span class="sidebar-text">Parcelamentos</span>
       </button>
 
       <button class="sidebar-link" type="button" data-tab-target="gastosFixos">
@@ -125,6 +130,7 @@
     <div class="container">
       <div class="tabs">
         <button class="tab-btn active" data-tab="lancamentos" type="button">Lançamentos</button>
+        <button class="tab-btn" data-tab="parcelamentos" type="button">Parcelamentos</button>
         <button class="tab-btn" data-tab="gastosFixos" type="button">Gastos fixos</button>
         <button class="tab-btn" data-tab="dashboard" type="button">Dashboard do mês</button>
         <button class="tab-btn" data-tab="comparativo" type="button">Comparativo mensal</button>
@@ -141,12 +147,12 @@
 
             <div class="info">
               O lançamento possui estes campos:
-              <strong>Data, Tipo, Descrição, Categoria, Valor e Tipo de Pagamento</strong>.
+              <strong>Data, Tipo, Descrição, Categoria, Valor e Tipo de Pagamento</strong>. Para compras parceladas, informe o valor total e o sistema cria as parcelas futuras com valores iguais ou personalizados.
             </div>
 
             <form id="financeForm" class="form-grid">
               <label for="data">
-                <span>Data</span>
+                <span id="dataLabelText">Data</span>
                 <input type="text" id="data" name="data" inputmode="numeric" maxlength="10" autocomplete="off"
                   required />
               </label>
@@ -174,7 +180,7 @@
               </label>
 
               <label for="valor">
-                <span>Valor</span>
+                <span id="valorLabelText">Valor</span>
                 <input type="text" id="valor" name="valor" inputmode="decimal" placeholder="R$ 0,00" autocomplete="off"
                   required />
               </label>
@@ -191,6 +197,45 @@
                   <option value="Cartão P">Cartão P</option>
                 </select>
               </label>
+
+              <label class="campo-checkbox campo-parcelado" for="parcelado">
+                <span>Compra parcelada?</span>
+                <div class="checkbox-lancamento">
+                  <input type="checkbox" id="parcelado" name="parcelado" />
+                  <span>Sim, quero gerar e acompanhar as parcelas</span>
+                </div>
+              </label>
+
+              <div id="parcelamentoPainel" class="parcelamento-config form-span-all" hidden>
+                <div class="parcelamento-config__header">
+                  <div>
+                    <strong>Configuração do parcelamento</strong>
+                    <p>O vencimento informado acima será usado na 1ª parcela. As próximas avançam mês a mês.</p>
+                  </div>
+                </div>
+
+                <div class="parcelamento-config__grid">
+                  <label for="totalParcelas">
+                    <span>Quantidade de parcelas</span>
+                    <input type="number" id="totalParcelas" name="totalParcelas" min="2" max="60" step="1" placeholder="Ex: 10" />
+                  </label>
+
+                  <label for="modoParcelas">
+                    <span>Valores das parcelas</span>
+                    <select id="modoParcelas" name="modoParcelas">
+                      <option value="iguais">Dividir igualmente</option>
+                      <option value="personalizadas">Personalizar valores</option>
+                    </select>
+                  </label>
+                </div>
+
+                <div class="parcelamento-aviso">
+                  Marque <strong>Pago</strong> apenas nas parcelas que você já quitou. As pendentes ficam no saldo a pagar e não entram como despesa realizada nos dashboards.
+                </div>
+
+                <div id="parcelasPreview" class="parcelas-preview"></div>
+                <div id="parcelasResumo" class="parcelas-resumo"></div>
+              </div>
             </form>
 
             <div class="actions">
@@ -262,6 +307,7 @@
                 <option value="Vales">Vales</option>
               </select>
             </label>
+          </div>
 
           <div class="table-wrapper">
             <table>
@@ -273,6 +319,8 @@
                   <th>Categoria</th>
                   <th class="col-valor">Valor</th>
                   <th>Tipo de pagamento</th>
+                  <th>Parcela</th>
+                  <th>Status</th>
                   <th>Ações</th>
                 </tr>
               </thead>
@@ -280,6 +328,57 @@
             </table>
           </div>
         </div>
+      </section>
+
+      <section id="parcelamentos" class="tab-content">
+        <div class="parcelamentos-hero">
+          <div>
+            <span class="parcelamentos-kicker">Compromissos futuros</span>
+            <h2>Parcelamentos</h2>
+            <p>Acompanhe quanto já foi pago, quanto ainda falta e o vencimento de cada parcela.</p>
+          </div>
+          <button id="btnNovoParcelamento" class="btn-primary" type="button">+ Nova compra parcelada</button>
+        </div>
+
+        <div class="parcelamentos-resumo-grid">
+          <div class="parcelamento-total-card">
+            <span>Valor original</span>
+            <strong id="parcelamentosTotalOriginal">R$ 0,00</strong>
+            <small>Total das compras parceladas</small>
+          </div>
+          <div class="parcelamento-total-card pago">
+            <span>Já pago</span>
+            <strong id="parcelamentosTotalPago">R$ 0,00</strong>
+            <small>Parcelas marcadas como pagas</small>
+          </div>
+          <div class="parcelamento-total-card aberto">
+            <span>Saldo a pagar</span>
+            <strong id="parcelamentosSaldoAberto">R$ 0,00</strong>
+            <small>Compromisso que ainda está pendente</small>
+          </div>
+          <div class="parcelamento-total-card mes">
+            <span>Pendente neste mês</span>
+            <strong id="parcelamentosPendenteMes">R$ 0,00</strong>
+            <small id="parcelamentosPendenteMesLabel">Parcelas do mês atual</small>
+          </div>
+        </div>
+
+        <div class="card card-spacing parcelamentos-toolbar">
+          <div>
+            <h3>Suas compras parceladas</h3>
+            <p>Abra uma compra para conferir as parcelas ou alterar o status de pagamento.</p>
+          </div>
+          <label for="filtroParcelamentos">
+            <span>Mostrar</span>
+            <select id="filtroParcelamentos">
+              <option value="abertos">Em aberto</option>
+              <option value="todos">Todos</option>
+              <option value="quitados">Quitados</option>
+            </select>
+          </label>
+        </div>
+
+        <div id="listaParcelamentos" class="parcelamentos-lista"></div>
       </section>
 
       <section id="gastosFixos" class="tab-content">
@@ -792,14 +891,15 @@
     </div>
   </div>
 
-        <script src="js/utils.js"></script>
-        <script src="js/api.js?v=6"></script>
-        <script src="js/form.js"></script>
-        <script src="js/ui.js"></script>
+        <script src="js/utils.js?v=8"></script>
+        <script src="js/api.js?v=8"></script>
+        <script src="js/form.js?v=8"></script>
+        <script src="js/ui.js?v=8"></script>
         <script src="js/charts.js"></script>
         <script src="js/metas.js"></script>
         <script src="js/gastos-fixos.js?v=7"></script>
-        <script src="js/main.js"></script>
+        <script src="js/parcelamentos.js?v=8"></script>
+        <script src="js/main.js?v=8"></script>
         <script src="js/auth.js"></script>
 
 </body>

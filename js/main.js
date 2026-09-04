@@ -36,7 +36,22 @@ function ajustarMesLancamentosSelecionado() {
   }
 
   if (!mesLancamentosSelecionado || !mesesDisponiveis.includes(mesLancamentosSelecionado)) {
-    mesLancamentosSelecionado = mesesDisponiveis[mesesDisponiveis.length - 1];
+    const hoje = new Date();
+    const mesAtual = `${String(hoje.getMonth() + 1).padStart(2, '0')}/${hoje.getFullYear()}`;
+
+    if (mesesDisponiveis.includes(mesAtual)) {
+      mesLancamentosSelecionado = mesAtual;
+      return;
+    }
+
+    const mesesAteHoje = mesesDisponiveis.filter(chave => {
+      const [mes, ano] = chave.split('/').map(Number);
+      return new Date(ano, mes - 1, 1) <= new Date(hoje.getFullYear(), hoje.getMonth(), 1);
+    });
+
+    mesLancamentosSelecionado = mesesAteHoje.length
+      ? mesesAteHoje[mesesAteHoje.length - 1]
+      : mesesDisponiveis[0];
   }
 }
 
@@ -245,6 +260,12 @@ function salvarAgendamentoLancamento() {
   }
 
   const dadosBase = obterDadosBaseParaAgendamento();
+
+  if (dadosBase.parcelado) {
+    setStatus('Compras parceladas não precisam ser agendadas: o sistema já cria todas as parcelas futuras.', true);
+    return;
+  }
+
   const novoAgendamento = {
     ...dadosBase,
     id: gerarIdAgendamento(),
@@ -366,6 +387,11 @@ function iniciarEdicaoLancamento(id) {
     return;
   }
 
+  if (lancamento.parcelado && lancamento.grupoParcelamento) {
+    abrirParcelamento(lancamento.grupoParcelamento);
+    return;
+  }
+
   lancamentoEmEdicaoId = id;
   preencherFormularioParaEdicao(lancamento);
   atualizarTextoBotaoSalvar();
@@ -397,17 +423,21 @@ async function atualizarTelaCompleta() {
   renderTabela(lancamentos);
   atualizarControleMesLancamentos(lancamentos, mesLancamentosSelecionado);
 
+  if (typeof renderParcelamentos === 'function') {
+    renderParcelamentos(lancamentos);
+  }
+
   if (tabAtiva === 'dashboard') {
     await atualizarDashboardComContas();
   }
 
   if (tabAtiva === 'comparativo') {
-    await atualizarComparativoComContas(lancamentos);
+    await atualizarComparativoComContas(obterLancamentosAnaliticos());
     revisaoComparativoRenderizada = revisaoDados;
   }
 
   if (tabAtiva === 'metas' && typeof atualizarPainelMetas === 'function') {
-    atualizarPainelMetas(lancamentos);
+    atualizarPainelMetas(obterLancamentosAnaliticos());
   }
 }
 
@@ -444,7 +474,7 @@ function mudarMesLancamentos(direcao) {
     mesLancamentosSelecionado = mesesDisponiveis[novoIndice];
   }
   if (typeof atualizarPainelMetas === 'function') {
-    atualizarPainelMetas(lancamentos);
+    atualizarPainelMetas(obterLancamentosAnaliticos());
   }
 
   renderTabela(lancamentos);
@@ -502,12 +532,19 @@ async function salvarLancamento() {
       return;
     }
 
-    setStatus('Salvando lançamento...');
-    await salvarLancamentoAPI(novo);
+    setStatus(novo.parcelado ? 'Criando parcelamento...' : 'Salvando lançamento...');
+    const resposta = await salvarLancamentoAPI(novo);
+    const grupoCriado = novo.parcelado ? resposta?.dados?.grupoParcelamento : null;
     limparFormularioSegura();
     preencherDataAtualNoFormulario();
     await carregarDados();
-    setStatus('Lançamento salvo com sucesso.');
+
+    if (grupoCriado && typeof abrirParcelamento === 'function') {
+      await abrirParcelamento(grupoCriado);
+      setStatus('Compra parcelada criada. Acompanhe o saldo e marque as parcelas conforme forem pagas.');
+    } else {
+      setStatus('Lançamento salvo com sucesso.');
+    }
   } catch (error) {
     console.error(error);
     setStatus(`Erro ao salvar: ${error.message}`, true);
@@ -557,6 +594,10 @@ async function ativarTab(tabId) {
 
   if (tabId === 'metas' && typeof atualizarPainelMetas === 'function') {
     atualizarPainelMetas(lancamentosAnaliticos);
+  }
+
+  if (tabId === 'parcelamentos' && typeof renderParcelamentos === 'function') {
+    renderParcelamentos(lancamentos);
   }
 
   if (tabId === 'gastosFixos' && typeof carregarGastosFixos === 'function') {
@@ -649,6 +690,12 @@ if (typeof filtroOrigem !== 'undefined' && filtroOrigem) {
 
   if (typeof financeTableBody !== 'undefined' && financeTableBody) {
     financeTableBody.addEventListener('click', async (event) => {
+      const botaoGerenciar = event.target.closest('.btn-gerenciar-parcelamento');
+      if (botaoGerenciar) {
+        await abrirParcelamento(botaoGerenciar.dataset.grupo);
+        return;
+      }
+
       const botaoEditar = event.target.closest('.btn-editar');
       if (botaoEditar) {
         iniciarEdicaoLancamento(botaoEditar.dataset.id);
@@ -711,6 +758,9 @@ document.addEventListener('DOMContentLoaded', async () => {
   if (typeof inicializarGastosFixos === 'function') {
     inicializarGastosFixos();
   }
+  if (typeof configurarEventosParcelamentos === 'function') {
+    configurarEventosParcelamentos();
+  }
 
   preencherDataAtualNoFormulario();
   atualizarTextoBotaoSalvar();
@@ -727,5 +777,9 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 });
 function obterLancamentosAnaliticos() {
-  return [...lancamentos];
+  return lancamentos.filter(item => {
+    if (!item.parcelado) return true;
+    if (!item.grupoParcelamento) return true; // compatibilidade com parcelas antigas
+    return item.parcelaPaga === true;
+  });
 }
