@@ -7,7 +7,7 @@
   <title>Teste - Controle Financeiro</title>
 
   <link rel="stylesheet" href="css/style.css?v=8" />
-  <link rel="stylesheet" href="css/perfil.css?v=1" />
+  <link rel="stylesheet" href="css/perfil.css?v=2" />
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 
@@ -104,6 +104,22 @@
         <button type="button" id="perfilOlho" class="perfil-icone" aria-label="Mostrar valores" aria-pressed="false"></button>
       </div>
       <p id="perfilStatus" role="status" class="perfil-legenda"></p>
+      <button id="perfilPersonalizar" class="perfil-personalizar" type="button" aria-expanded="false" aria-controls="perfilEditor">⚙ Personalizar resumo</button>
+      <section id="perfilEditor" class="perfil-editor" aria-labelledby="perfilEditorTitulo" hidden>
+        <h3 id="perfilEditorTitulo">O que você quer ver?</h3>
+        <p>Marque as informações que deseja exibir. Sua escolha fica salva para seu usuário neste navegador.</p>
+        <div class="perfil-editor-atalhos">
+          <button type="button" id="perfilMarcarTodos">Marcar todos</button>
+          <button type="button" id="perfilDesmarcarTodos">Desmarcar todos</button>
+          <button type="button" id="perfilRestaurar">Restaurar padrão</button>
+        </div>
+        <div id="perfilOpcoes"></div>
+        <div class="perfil-editor-acoes">
+          <button type="button" id="perfilCancelar">Cancelar</button>
+          <button type="button" id="perfilSalvar" class="perfil-salvar">Salvar preferências</button>
+        </div>
+      </section>
+      <p id="perfilPreferenciasStatus" class="perfil-legenda" role="status"></p>
       <div id="perfilIndicadores" class="perfil-grid"></div>
       <p id="perfilComparacao" class="perfil-comparacao"></p>
       <p class="perfil-nota">Valores realizados seguem os lançamentos: parcelas não pagas ficam fora dos ganhos e despesas. Lançamentos avulsos são considerados realizados. Vales aparecem separados e não entram no resultado. Contas fixas ainda não lançadas não entram neste resumo. Cada parcela conta como um lançamento.</p>
@@ -915,7 +931,7 @@
         <script src="js/parcelamentos.js?v=8"></script>
         <script src="js/main.js?v=9"></script>
         <script src="js/auth.js"></script>
-        <script src="js/perfil.js?v=1"></script>
+        <script src="js/perfil.js?v=2"></script>
 
 </body>
 

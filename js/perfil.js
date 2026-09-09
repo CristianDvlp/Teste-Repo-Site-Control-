@@ -2,6 +2,100 @@
 let perfilDados = [];
 let perfilEstado = 'carregando';
 let perfilOculto = true;
+const perfilCatalogo = [
+  ['resultado', 'Resultado do período', 'Ganhos realizados menos despesas realizadas.', 'Valores', true],
+  ['ganhos', 'Total de ganhos realizados', 'Receitas no período selecionado.', 'Valores', true],
+  ['gastos', 'Total de despesas realizadas', 'Despesas no período selecionado.', 'Valores', true],
+  ['vales', 'Vales', 'Valor separado dos ganhos e despesas.', 'Valores', true],
+  ['mediaDespesa', 'Média por despesa', 'Total de despesas dividido pela quantidade de despesas realizadas.', 'Valores', false],
+  ['maiorDespesa', 'Maior despesa', 'Valor e categoria do maior registro de despesa realizado; parcelas são registros separados.', 'Valores', false],
+  ['maiorGanho', 'Maior ganho', 'Valor do maior registro de receita realizado.', 'Valores', false],
+  ['percentualGasto', 'Percentual dos ganhos gasto', 'Despesas realizadas divididas pelos ganhos realizados.', 'Valores', false],
+  ['quantidade', 'Lançamentos no período', 'Cada parcela conta como um lançamento.', 'Atividade', true],
+  ['historico', 'Lançamentos no histórico', 'Todos os registros existentes com data até hoje, independentemente do filtro.', 'Atividade', false],
+  ['realizados', 'Lançamentos realizados', 'Quantidade de registros considerados pagos ou recebidos.', 'Atividade', false],
+  ['qtdDespesas', 'Quantidade de despesas realizadas', 'Número de despesas realizadas no período.', 'Atividade', false],
+  ['qtdGanhos', 'Quantidade de ganhos realizados', 'Número de receitas realizadas no período.', 'Atividade', false],
+  ['pagar', 'Parcelas a pagar no período', 'Quantidade e valor pendentes com data no período, até hoje.', 'Parcelas', true],
+  ['receber', 'Parcelas a receber no período', 'Quantidade e valor pendentes com data no período, até hoje.', 'Parcelas', true],
+  ['futuras', 'Parcelas futuras a pagar', 'Todas as parcelas de despesas não pagas com data após hoje; independe do filtro.', 'Parcelas', false],
+  ['categoria', 'Categoria com maior despesa', 'Categoria com o maior total de despesas realizadas.', 'Hábitos e datas', true],
+  ['pagamento', 'Forma de pagamento mais usada', 'Forma mais frequente entre as despesas realizadas; empates exibem todas.', 'Hábitos e datas', false],
+  ['ultimo', 'Data mais recente no período', 'Data do lançamento, não a data de cadastro.', 'Hábitos e datas', true],
+  ['comparacao', 'Comparação com o mês anterior', 'Disponível em Este mês: despesas até hoje versus o mês anterior completo.', 'Hábitos e datas', true]
+];
+const perfilPadrao = () => perfilCatalogo.filter(item => item[4]).map(item => item[0]);
+let perfilSelecionados = perfilPadrao();
+
+function chaveOpcoesPerfil() {
+  return 'perfil_indicadores_v1_' + (window.usuarioAtualChave || 'sessao');
+}
+
+function carregarOpcoesPerfil() {
+  perfilSelecionados = perfilPadrao();
+  try {
+    const salvo = JSON.parse(localStorage.getItem(chaveOpcoesPerfil()));
+    if (Array.isArray(salvo)) perfilSelecionados = perfilCatalogo.filter(item => salvo.includes(item[0])).map(item => item[0]);
+  } catch { /* preferências inválidas usam o padrão */ }
+}
+
+function fecharEditorPerfil() {
+  document.getElementById('perfilEditor').hidden = true;
+  document.getElementById('perfilPersonalizar').setAttribute('aria-expanded', 'false');
+}
+
+function abrirEditorPerfil() {
+  const editor = document.getElementById('perfilEditor');
+  if (!editor.hidden) { fecharEditorPerfil(); return; }
+  const opcoes = document.getElementById('perfilOpcoes');
+  opcoes.replaceChildren();
+  const grupos = new Map();
+  perfilCatalogo.forEach(([id, titulo, descricao, grupo]) => {
+    if (!grupos.has(grupo)) {
+      const fieldset = document.createElement('fieldset');
+      const legend = document.createElement('legend');
+      legend.textContent = grupo;
+      fieldset.appendChild(legend);
+      opcoes.appendChild(fieldset);
+      grupos.set(grupo, fieldset);
+    }
+    const label = document.createElement('label');
+    label.className = 'perfil-opcao';
+    const input = document.createElement('input');
+    input.type = 'checkbox';
+    input.value = id;
+    input.checked = perfilSelecionados.includes(id);
+    const texto = document.createElement('span');
+    const nome = document.createElement('strong');
+    nome.textContent = titulo;
+    const ajuda = document.createElement('small');
+    ajuda.textContent = descricao;
+    texto.appendChild(nome);
+    texto.appendChild(ajuda);
+    label.appendChild(input);
+    label.appendChild(texto);
+    grupos.get(grupo).appendChild(label);
+  });
+  document.getElementById('perfilPreferenciasStatus').textContent = '';
+  editor.hidden = false;
+  document.getElementById('perfilPersonalizar').setAttribute('aria-expanded', 'true');
+  opcoes.querySelector('input').focus();
+}
+
+function marcarOpcoesPerfil(ids) {
+  document.querySelectorAll('#perfilOpcoes input').forEach(input => { input.checked = ids.includes(input.value); });
+}
+
+function salvarOpcoesPerfil() {
+  perfilSelecionados = [...document.querySelectorAll('#perfilOpcoes input:checked')].map(input => input.value);
+  let mensagem = 'Preferências salvas neste navegador.';
+  try { localStorage.setItem(chaveOpcoesPerfil(), JSON.stringify(perfilSelecionados)); }
+  catch { mensagem = 'Resumo atualizado, mas o navegador não permitiu salvar suas preferências. A seleção pode ser perdida ao reabrir.'; }
+  fecharEditorPerfil();
+  renderResumoPerfil();
+  document.getElementById('perfilPreferenciasStatus').textContent = mensagem;
+  document.getElementById('perfilPersonalizar').focus();
+}
 
 function fecharMenuPerfil() {
   document.getElementById('menuUsuario').style.display = 'none';
@@ -28,6 +122,9 @@ function chavePrivacidadePerfil() {
 
 function abrirResumoPerfil() {
   fecharMenuPerfil();
+  carregarOpcoesPerfil();
+  fecharEditorPerfil();
+  document.getElementById('perfilPreferenciasStatus').textContent = '';
   perfilOculto = true;
   try { perfilOculto = localStorage.getItem(chavePrivacidadePerfil()) !== 'false'; } catch { /* armazenamento opcional */ }
   document.getElementById('perfilNomeResumo').textContent = document.getElementById('nomeUsuarioHeader').textContent;
@@ -63,11 +160,26 @@ function calcularResumoPerfil(dados, periodo, agora = new Date()) {
   const despesasAnteriores = soma(dados.filter(item => valido(item) && data(item) >= inicioAnterior && data(item) < fimAnterior && !pendente(item) && tipo(item) === 'Despesa'));
   const ganhos = soma(porTipo(realizados, 'Receita'));
   const gastos = soma(despesas);
+  const receitas = porTipo(realizados, 'Receita');
+  const pagamentos = new Map();
+  despesas.forEach(item => {
+    const nome = String(item.pagamento || 'Não informado').trim() || 'Não informado';
+    pagamentos.set(nome, (pagamentos.get(nome) || 0) + 1);
+  });
+  const frequencia = Math.max(0, ...pagamentos.values());
+  const pagamento = [...pagamentos].filter(item => item[1] === frequencia).map(item => item[0]).join(', ');
+  const maiorValor = itens => [...itens].sort((a, b) => obterValorAbsoluto(b) - obterValorAbsoluto(a))[0];
   return {
     totalHistorico: ateHoje.length, quantidade: selecionados.length, ganhos, gastos, resultado: ganhos - gastos,
     vales: soma(porTipo(realizados, 'Vales')), realizados: realizados.length,
     pagar: porTipo(selecionados.filter(pendente), 'Despesa'), receber: porTipo(selecionados.filter(pendente), 'Receita'),
-    maior, ultimo, despesasAnteriores, soma
+    maior, ultimo, despesasAnteriores, soma,
+    qtdDespesas: despesas.length, qtdGanhos: receitas.length,
+    mediaDespesa: despesas.length ? gastos / despesas.length : null,
+    maiorDespesa: maiorValor(despesas), maiorGanho: maiorValor(receitas),
+    percentualGasto: ganhos > 0 ? gastos / ganhos * 100 : null,
+    pagamento, frequencia,
+    futuras: porTipo(dados.filter(item => valido(item) && data(item) > hoje && pendente(item)), 'Despesa')
   };
 }
 
@@ -90,8 +202,9 @@ function renderResumoPerfil() {
   const periodo = document.getElementById('perfilPeriodo').value;
   const resumo = calcularResumoPerfil(perfilDados, periodo);
   const moeda = valor => perfilOculto ? 'R$ •••••' : formatarMoeda(valor);
-  status.textContent = `${resumo.totalHistorico} lançamentos no histórico até hoje · ${resumo.quantidade} no período selecionado, até hoje.`;
-  const card = (titulo, valor, detalhe = '') => {
+  status.textContent = perfilSelecionados.length ? 'Período selecionado até hoje. Indicadores de histórico e parcelas futuras usam seus próprios intervalos.' : 'Seu resumo está vazio. Clique em Personalizar resumo para escolher as informações.';
+  const card = (id, titulo, valor, detalhe = '') => {
+    if (!perfilSelecionados.includes(id)) return;
     const caixa = document.createElement('div');
     caixa.className = 'perfil-card';
     [['span', titulo], ['strong', valor], ['small', detalhe]].forEach(([tag, texto]) => {
@@ -102,16 +215,27 @@ function renderResumoPerfil() {
     });
     grid.appendChild(caixa);
   };
-  card('Resultado do período', moeda(resumo.resultado), 'Ganhos menos despesas; não é saldo bancário.');
-  card('Lançamentos no período', String(resumo.quantidade), `${resumo.realizados} considerados realizados`);
-  card('Total de ganhos realizados', moeda(resumo.ganhos));
-  card('Total de despesas realizadas', moeda(resumo.gastos));
-  card('Parcelas a pagar no período', moeda(resumo.soma(resumo.pagar)), `${resumo.pagar.length} pendentes`);
-  card('Parcelas a receber no período', moeda(resumo.soma(resumo.receber)), `${resumo.receber.length} pendentes`);
-  card('Vales no período', moeda(resumo.vales), 'Separados dos ganhos e despesas.');
-  card('Categoria com maior despesa', resumo.maior ? resumo.maior[0] : 'Sem despesas', resumo.maior ? moeda(resumo.maior[1]) : 'Nenhuma despesa realizada neste período.');
-  card('Data mais recente no período', resumo.ultimo ? formatarDataParaTela(resumo.ultimo.data) : 'Sem lançamentos');
-  if (periodo === 'mes') {
+  card('resultado', 'Resultado do período', moeda(resumo.resultado), 'Ganhos menos despesas; não é saldo bancário.');
+  card('quantidade', 'Lançamentos no período', String(resumo.quantidade));
+  card('historico', 'Lançamentos no histórico', String(resumo.totalHistorico), 'Todos os registros existentes com data até hoje.');
+  card('realizados', 'Lançamentos realizados', String(resumo.realizados));
+  card('qtdDespesas', 'Quantidade de despesas realizadas', String(resumo.qtdDespesas));
+  card('qtdGanhos', 'Quantidade de ganhos realizados', String(resumo.qtdGanhos));
+  card('ganhos', 'Total de ganhos realizados', moeda(resumo.ganhos));
+  card('gastos', 'Total de despesas realizadas', moeda(resumo.gastos));
+  card('pagar', 'Parcelas a pagar no período', moeda(resumo.soma(resumo.pagar)), `${resumo.pagar.length} pendentes`);
+  card('receber', 'Parcelas a receber no período', moeda(resumo.soma(resumo.receber)), `${resumo.receber.length} pendentes`);
+  card('futuras', 'Parcelas futuras a pagar', moeda(resumo.soma(resumo.futuras)), `${resumo.futuras.length} pendentes após hoje, independentemente do filtro.`);
+  card('vales', 'Vales no período', moeda(resumo.vales), 'Separados dos ganhos e despesas.');
+  card('mediaDespesa', 'Média por despesa', resumo.mediaDespesa === null ? 'Sem despesas' : moeda(resumo.mediaDespesa));
+  card('maiorDespesa', 'Maior despesa realizada', resumo.maiorDespesa ? moeda(obterValorAbsoluto(resumo.maiorDespesa)) : 'Sem despesas', resumo.maiorDespesa ? String(resumo.maiorDespesa.categoria || 'Sem categoria') : '');
+  card('maiorGanho', 'Maior ganho realizado', resumo.maiorGanho ? moeda(obterValorAbsoluto(resumo.maiorGanho)) : 'Sem ganhos');
+  card('percentualGasto', 'Percentual dos ganhos gasto', perfilOculto ? '•••••' : resumo.percentualGasto === null ? 'Sem ganhos para calcular' : `${resumo.percentualGasto.toLocaleString('pt-BR', { maximumFractionDigits: 1 })}%`);
+  card('pagamento', 'Forma de pagamento mais usada', resumo.pagamento || 'Sem despesas', resumo.frequencia ? `${resumo.frequencia} despesas por forma indicada.` : '');
+  card('categoria', 'Categoria com maior despesa', resumo.maior ? resumo.maior[0] : 'Sem despesas', resumo.maior ? moeda(resumo.maior[1]) : 'Nenhuma despesa realizada neste período.');
+  card('ultimo', 'Data mais recente no período', resumo.ultimo ? formatarDataParaTela(resumo.ultimo.data) : 'Sem lançamentos');
+  if (perfilSelecionados.includes('comparacao') && periodo !== 'mes') comparacao.textContent = 'Selecione Este mês para ver a comparação com o mês anterior.';
+  if (perfilSelecionados.includes('comparacao') && periodo === 'mes') {
     if (perfilOculto) comparacao.textContent = 'Mostre os valores para ver a comparação de despesas.';
     else if (resumo.despesasAnteriores > 0) {
       const variacao = (resumo.gastos / resumo.despesasAnteriores - 1) * 100;
@@ -126,6 +250,15 @@ window.addEventListener('perfil:dados', event => {
   if (document.getElementById('resumoPerfil').open) renderResumoPerfil();
 });
 document.getElementById('perfilPeriodo').addEventListener('change', renderResumoPerfil);
+document.getElementById('perfilPersonalizar').addEventListener('click', abrirEditorPerfil);
+document.getElementById('perfilSalvar').addEventListener('click', salvarOpcoesPerfil);
+document.getElementById('perfilCancelar').addEventListener('click', () => {
+  fecharEditorPerfil();
+  document.getElementById('perfilPersonalizar').focus();
+});
+document.getElementById('perfilMarcarTodos').addEventListener('click', () => marcarOpcoesPerfil(perfilCatalogo.map(item => item[0])));
+document.getElementById('perfilDesmarcarTodos').addEventListener('click', () => marcarOpcoesPerfil([]));
+document.getElementById('perfilRestaurar').addEventListener('click', () => marcarOpcoesPerfil(perfilPadrao()));
 document.getElementById('perfilOlho').addEventListener('click', () => {
   perfilOculto = !perfilOculto;
   try { localStorage.setItem(chavePrivacidadePerfil(), String(perfilOculto)); } catch { /* sem persistência */ }

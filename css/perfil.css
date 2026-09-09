@@ -1,4 +1,19 @@
 /* Perfil: complemento isolado para preservar o restante do site. */
+.perfil-personalizar { margin: 16px 0; border: 1px solid #cbd5e1; border-radius: 10px; padding: 10px 14px; background: white; color: #1e40af; cursor: pointer; font-size: 14px; font-weight: 600; }
+.perfil-editor { background: white; border: 1px solid #bfdbfe; border-radius: 14px; padding: 18px; margin-bottom: 16px; }
+.perfil-editor[hidden] { display: none; }
+.perfil-editor h3 { margin: 0; font-size: 18px; }
+.perfil-editor p { font-size: 14px; color: #475569; line-height: 1.5; }
+.perfil-editor-atalhos, .perfil-editor-acoes { display: flex; flex-wrap: wrap; gap: 8px; }
+.perfil-editor button { min-height: 44px; padding: 8px 12px; border: 1px solid #cbd5e1; background: #f8fafc; color: #334155; border-radius: 8px; cursor: pointer; font-size: 14px; }
+.perfil-editor-acoes { justify-content: flex-end; margin-top: 16px; }
+.perfil-editor .perfil-salvar { background: #2563eb; color: white; border-color: #2563eb; }
+.perfil-editor fieldset { border: 0; border-top: 1px solid #e2e8f0; padding: 12px 0 0; margin: 20px 0 0; }
+.perfil-editor legend { font-weight: 700; font-size: 15px; padding-right: 8px; }
+.perfil-editor .perfil-opcao { display: flex; align-items: flex-start; flex-direction: row; gap: 10px; padding: 10px 0; margin: 0; cursor: pointer; }
+.perfil-opcao input[type="checkbox"] { width: 18px; height: 18px; flex: 0 0 18px; margin: 2px 0 0; accent-color: #2563eb; }
+.perfil-opcao strong { display: block; font-size: 14px; color: #172033; }
+.perfil-opcao small { display: block; font-size: 13px; color: #475569; margin-top: 3px; line-height: 1.4; }
 .sidebar-hover { display: flex; flex-direction: column; height: 100dvh; }
 .sidebar-nav { flex: 1; min-height: 0; overflow-y: auto; overflow-x: hidden; }
 .sidebar-hover:focus-within, .sidebar-hover.perfil-aberto { width: 250px; }
