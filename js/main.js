@@ -485,7 +485,9 @@ async function carregarDados() {
 
   try {
     setStatus('Carregando dados...');
+    window.dispatchEvent(new CustomEvent('perfil:dados', { detail: { estado: 'carregando' } }));
     lancamentos = await carregarDadosAPI();
+    window.dispatchEvent(new CustomEvent('perfil:dados', { detail: { estado: 'pronto', dados: lancamentos } }));
     revisaoDados += 1;
     chaveDashboardRenderizada = '';
     revisaoComparativoRenderizada = -1;
@@ -504,6 +506,7 @@ async function carregarDados() {
   } catch (error) {
     console.error(error);
     setStatus(`Erro ao carregar dados: ${error.message}`, true);
+    window.dispatchEvent(new CustomEvent('perfil:dados', { detail: { estado: 'erro' } }));
   }
 }
 

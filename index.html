@@ -7,6 +7,7 @@
   <title>Teste - Controle Financeiro</title>
 
   <link rel="stylesheet" href="css/style.css?v=8" />
+  <link rel="stylesheet" href="css/perfil.css?v=1" />
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 
@@ -52,6 +53,18 @@
       </button>
 
     </nav>
+    <div class="usuario-menu-wrap perfil-sidebar">
+      <button id="botaoPerfil" class="perfil-botao" type="button" onclick="toggleMenuUsuario()" aria-label="Abrir perfil" aria-expanded="false" aria-controls="menuUsuario">
+        <span class="perfil-avatar" aria-hidden="true">👤</span>
+        <span class="sidebar-text perfil-identidade"><strong id="nomeUsuarioHeader">Usuário</strong><small>Meu perfil</small></span>
+        <span class="sidebar-text" aria-hidden="true">▴</span>
+      </button>
+      <div id="menuUsuario" class="menu-usuario" aria-label="Opções do perfil">
+        <button type="button" onclick="abrirResumoPerfil()">📋 Resumo da conta</button>
+        <button type="button" onclick="fecharMenuPerfil(); abrirModalSenha()">🔑 Resetar senha</button>
+        <button type="button" class="perfil-sair" onclick="sairConta()">Sair da conta</button>
+      </div>
+    </div>
   </aside>
 
   <div class="main-layout">
@@ -63,19 +76,6 @@
         </div>
 
         <div class="header-user-area">
-          <div class="usuario-menu-wrap">
-            <button class="usuario-logado-box" type="button" onclick="toggleMenuUsuario()">
-              <span>👤</span>
-              <strong id="nomeUsuarioHeader">Usuário</strong>
-              <span>▾</span>
-            </button>
-
-            <div id="menuUsuario" class="menu-usuario">
-              <button type="button" onclick="abrirModalSenha()">
-                🔑 Resetar senha
-              </button>
-            </div>
-          </div>
 
           <div id="solicitacoesWrap" class="solicitacoes-wrap" style="display:none;">
             <button class="btn-solicitacoes" type="button" onclick="togglePainelSolicitacoes()">
@@ -89,12 +89,26 @@
             </div>
           </div>
 
-          <button class="btn-sair" type="button" onclick="sairConta()">
-            Sair
-          </button>
         </div>
       </div>
     </header>
+    <dialog id="resumoPerfil" class="perfil-dialog" aria-labelledby="tituloResumoPerfil">
+      <div class="perfil-cabecalho">
+        <div><p id="perfilNomeResumo" class="perfil-legenda"></p><h2 id="tituloResumoPerfil">Resumo da conta</h2></div>
+        <button type="button" class="perfil-icone" onclick="document.getElementById('resumoPerfil').close()" aria-label="Fechar resumo">×</button>
+      </div>
+      <div class="perfil-filtros">
+        <label for="perfilPeriodo">Período
+          <select id="perfilPeriodo"><option value="mes">Este mês</option><option value="30dias">Últimos 30 dias</option><option value="ano">Este ano</option><option value="tudo">Todo o período</option></select>
+        </label>
+        <button type="button" id="perfilOlho" class="perfil-icone" aria-label="Mostrar valores" aria-pressed="false"></button>
+      </div>
+      <p id="perfilStatus" role="status" class="perfil-legenda"></p>
+      <div id="perfilIndicadores" class="perfil-grid"></div>
+      <p id="perfilComparacao" class="perfil-comparacao"></p>
+      <p class="perfil-nota">Valores realizados seguem os lançamentos: parcelas não pagas ficam fora dos ganhos e despesas. Lançamentos avulsos são considerados realizados. Vales aparecem separados e não entram no resultado. Contas fixas ainda não lançadas não entram neste resumo. Cada parcela conta como um lançamento.</p>
+      <button type="button" id="perfilTentar" class="btn-secondary" hidden>Tentar carregar novamente</button>
+    </dialog>
     <div id="modalSenha" class="modal-senha-overlay" style="display:none;">
       <div class="modal-senha">
         <div class="modal-senha-header">
@@ -899,8 +913,9 @@
         <script src="js/metas.js"></script>
         <script src="js/gastos-fixos.js?v=7"></script>
         <script src="js/parcelamentos.js?v=8"></script>
-        <script src="js/main.js?v=8"></script>
+        <script src="js/main.js?v=9"></script>
         <script src="js/auth.js"></script>
+        <script src="js/perfil.js?v=1"></script>
 
 </body>
 
