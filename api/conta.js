@@ -62,7 +62,7 @@ export default async function handler(req,res) {
   ) SELECT id FROM atualizado`;
   if(!atualizado) throw falha(400,'Link inválido, já utilizado ou expirado. Solicite um novo link.');
   res.setHeader('Set-Cookie','session=; HttpOnly; Path=/; Max-Age=0; SameSite=Lax; Secure');
-  return res.status(200).json({mensagem:finalidade === 'senha' ? 'Senha redefinida. Entre com seu e-mail e a nova senha.' : 'E-mail confirmado! Você já pode entrar com seu e-mail e senha.'});
+  return res.status(200).json({mensagem:finalidade === 'senha' ? 'Senha redefinida. Entre com seu usuário ou e-mail e a nova senha.' : 'E-mail confirmado! Você já pode entrar com seu usuário ou e-mail e senha.'});
  } catch(erro) {
   if(erro.code === '23505') return responderErro(res,falha(409,'Este e-mail não pode ser vinculado. Solicite um link para outro endereço.'));
   return responderErro(res,erro);

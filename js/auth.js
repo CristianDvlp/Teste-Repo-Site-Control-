@@ -109,6 +109,7 @@ async function alterarSenha() {
   const confirmarSenha = document.getElementById("confirmarSenhaReset").value;
   const status = document.getElementById("statusResetSenha");
 
+  status.classList.add('mensagem-erro');
   if (!senhaAtual || !novaSenha || !confirmarSenha) {
     status.textContent = "Preencha todos os campos.";
     return;
@@ -124,6 +125,7 @@ async function alterarSenha() {
     return
   }
 
+  try {
   const resposta = await fetch("/api/alterar-senha", {
     method: "POST",
     headers: {
@@ -143,9 +145,13 @@ async function alterarSenha() {
     return;
   }
 
+  status.classList.remove("mensagem-erro");
   status.textContent = "Senha alterada com sucesso!";
 
   setTimeout(() => {
     fecharModalSenha();
   }, 1200);
+  } catch {
+    status.textContent = "Não foi possível alterar a senha. Tente novamente.";
+  }
 }

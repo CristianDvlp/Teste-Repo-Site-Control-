@@ -20,3 +20,7 @@ body:has(.login-page) { overflow-y: auto; }
 .solicitacao-item { overflow-wrap: anywhere; }
 .solicitacao-item button { min-height: 44px; cursor: pointer; }
 .conta-lida { opacity: .7; }
+
+/* Erros com contraste adequado em superfícies claras e no login escuro. */
+.conta-status.mensagem-erro, #statusResetSenha.mensagem-erro { color: #b91c1c; }
+.login-card .login-status.mensagem-erro { color: #fca5a5; }

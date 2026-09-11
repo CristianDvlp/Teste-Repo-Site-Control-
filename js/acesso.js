@@ -7,7 +7,7 @@
  const el = id => document.getElementById(id);
  if (!/^[a-f0-9]{64}$/.test(token || '') || !['cadastro','vincular','senha'].includes(finalidade)) {
   el('acessoForm').hidden = true;
-  el('acessoStatus').textContent = 'Link inválido. Solicite outro pelo login ou pelo perfil.';
+  el('acessoStatus').classList.toggle('mensagem-erro', true); el('acessoStatus').textContent = 'Link inválido. Solicite outro pelo login ou pelo perfil.';
   return;
  }
  const vincular = finalidade === 'vincular';
@@ -21,9 +21,9 @@
   const btn = el('acessoEnviar');
   if (btn.disabled) return;
   const senha = el('acessoSenha').value, confirmarSenha = el('acessoConfirmar').value;
-  if (!vincular && senha !== confirmarSenha) { el('acessoStatus').textContent = 'As senhas não conferem.'; return; }
+  if (!vincular && senha !== confirmarSenha) { el('acessoStatus').classList.toggle('mensagem-erro', true); el('acessoStatus').textContent = 'As senhas não conferem.'; return; }
   btn.disabled = true;
-  el('acessoStatus').textContent = 'Confirmando…';
+  el('acessoStatus').classList.toggle('mensagem-erro', false); el('acessoStatus').textContent = 'Confirmando…';
   try {
    const r = await fetch('/api/conta', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ acao: 'confirmar', token, finalidade, senha, confirmarSenha }) });
    const dados = await r.json().catch(() => ({}));
@@ -31,7 +31,7 @@
    token = null;
    el('acessoForm').reset();
    el('acessoForm').hidden = true;
-   el('acessoStatus').textContent = dados.mensagem;
-  } catch (erro) { el('acessoStatus').textContent = erro.message; btn.disabled = false; }
+   el('acessoStatus').classList.toggle('mensagem-erro', false); el('acessoStatus').textContent = dados.mensagem;
+  } catch (erro) { el('acessoStatus').classList.toggle('mensagem-erro', true); el('acessoStatus').textContent = erro.message; btn.disabled = false; }
  });
 })();

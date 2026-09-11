@@ -30,7 +30,7 @@
     modo = acao;
     const cadastro = modo === 'cadastro', vincular = modo === 'vincular';
     el('contaForm').reset();
-    el('contaStatus').textContent = '';
+    el('contaStatus').classList.toggle('mensagem-erro', false); el('contaStatus').textContent = '';
     el('contaEnviar').disabled = false;
     el('contaNomeWrap').hidden = !cadastro;
     el('contaNome').required = cadastro;
@@ -49,7 +49,7 @@
     el('contaEnviar').textContent = cadastro ? 'Criar conta e enviar confirmação' : 'Enviar link por e-mail';
     el('contaAjuda').textContent = cadastro ? 'Você recebe um link para confirmar o e-mail e ativar sua conta. Não é necessária aprovação do administrador.' : vincular ? 'Vincule um e-mail para recuperar sua senha e entrar com ele. Confirme sua senha atual e depois o link recebido.' : 'Informe seu e-mail cadastrado. O link de recuperação vale por 30 minutos; o de confirmação, por 24 horas.';
     if (vincular && window.contaAtual?.emailConfirmado) {
-      el('contaAjuda').textContent = `E-mail confirmado: ${window.contaAtual.email}. Você pode usá-lo para entrar e recuperar sua senha.`;
+      el('contaAjuda').textContent = `E-mail confirmado: ${window.contaAtual.email}. Você pode entrar com ele ou com seu usuário cadastrado. Use o e-mail para recuperar sua senha.`;
       el('contaEmailWrap').hidden = true;
       el('contaEmail').required = false;
       el('contaSenhaWrap').hidden = true;
@@ -64,17 +64,17 @@
     const btn = el('contaEnviar');
     if (btn.disabled) return;
     const senha = el('contaSenha').value;
-    if (modo === 'cadastro' && senha !== el('contaConfirmar').value) { el('contaStatus').textContent = 'As senhas não conferem.'; return; }
+    if (modo === 'cadastro' && senha !== el('contaConfirmar').value) { el('contaStatus').classList.toggle('mensagem-erro', true); el('contaStatus').textContent = 'As senhas não conferem.'; return; }
     btn.disabled = true;
-    el('contaStatus').textContent = 'Enviando…';
+    el('contaStatus').classList.toggle('mensagem-erro', false); el('contaStatus').textContent = 'Enviando…';
     try {
       const body = await pedir(modo === 'cadastro' ? '/api/register' : '/api/conta', {
         acao: modo, nome: el('contaNome').value.trim(), email: el('contaEmail').value.trim(), senha
       });
-      el('contaStatus').textContent = body.mensagem;
+      el('contaStatus').classList.toggle('mensagem-erro', false); el('contaStatus').textContent = body.mensagem;
       el('contaSenha').value = '';
       el('contaConfirmar').value = '';
-    } catch (erro) { el('contaStatus').textContent = erro.message; }
+    } catch (erro) { el('contaStatus').classList.toggle('mensagem-erro', true); el('contaStatus').textContent = erro.message; }
     finally { btn.disabled = false; }
   });
 
@@ -83,11 +83,11 @@
     const btn = event.target.querySelector('[type=submit]');
     if (btn.disabled) return;
     btn.disabled = true;
-    el('loginStatus').textContent = 'Entrando…';
+    el('loginStatus').classList.toggle('mensagem-erro', false); el('loginStatus').textContent = 'Entrando…';
     try {
       await pedir('/api/login', { usuario: el('usuario').value.trim(), senha: el('senha').value });
       window.location.href = 'index.html';
-    } catch (erro) { el('loginStatus').textContent = erro.message; }
+    } catch (erro) { el('loginStatus').classList.toggle('mensagem-erro', true); el('loginStatus').textContent = erro.message; }
     finally { btn.disabled = false; }
   };
 

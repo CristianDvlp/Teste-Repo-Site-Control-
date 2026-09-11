@@ -90,7 +90,7 @@ Novas contas:
 Contas antigas já aprovadas:
 - Continuam usando o usuário e a senha existentes enquanto não houver e-mail.
 - Perfil > E-mail da conta permite vincular um e-mail, informando a senha atual.
-- O vínculo só acontece após confirmar o link enviado. Depois, o login é pelo
+- O vínculo só acontece após confirmar o link enviado. Depois, o login aceita o usuário cadastrado ou o
   e-mail; os mesmos ID, dados e permissões da conta são preservados.
 - Confirmar o vínculo encerra sessões antigas e pede um novo login.
 - Contas antigas sem e-mail que já esqueceram a senha precisam de atendimento
@@ -139,3 +139,12 @@ REFERÊNCIAS
 API de envio: https://resend.com/docs/api-reference/emails/send-email
 Restrição de remetente de teste: https://resend.com/docs/knowledge-base/403-error-resend-dev-domain
 Recuperação: https://cheatsheetseries.owasp.org/cheatsheets/Forgot_Password_Cheat_Sheet.html
+
+ATUALIZAÇÃO: USUÁRIO OU E-MAIL E ERROS
+- Usuários antigos continuam entrando pelo usuário mesmo após vincular e-mail.
+  Use a mesma grafia do usuário cadastrado; o e-mail ignora maiúsculas/minúsculas.
+- O nome exibido no perfil não é necessariamente o usuário de login.
+- Um e-mail só pode pertencer a uma conta, inclusive durante cadastro pendente.
+  O índice único da migração anterior já garante essa regra no banco.
+- Erros de login, cadastro, vínculo, confirmação e troca de senha ficam vermelhos.
+- Se já executou a migração anterior, não precisa de SQL adicional.

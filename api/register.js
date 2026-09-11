@@ -13,7 +13,8 @@ export default async function handler(req,res) {
   const [novo]=await sql`INSERT INTO usuarios(usuario,nome,email,senha_hash,status,admin,solicitado_em)
    VALUES (${`u_${randomUUID()}`},${nome},${email},${hash},'pendente',false,now())
    ON CONFLICT DO NOTHING RETURNING id,versao_sessao`;
-  if (novo) await enviarLink(novo,'cadastro',email);
+  if (!novo) throw falha(409,'Não foi possível criar a conta com esses dados. Se já tem conta, entre ou use a recuperação de senha; se aguarda confirmação, use Reenviar confirmação.');
+  await enviarLink(novo,'cadastro',email);
   return res.status(200).json({mensagem:'Se este e-mail puder ser cadastrado, você receberá um link de confirmação. Se já iniciou o cadastro, use Reenviar confirmação.'});
  } catch(erro) { return responderErro(res,erro); }
 }
