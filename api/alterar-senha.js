@@ -1,6 +1,6 @@
 import { neon } from "@neondatabase/serverless";
 import bcrypt from "bcryptjs";
-import jwt from "jsonwebtoken";
+import { validarTokenSessao, protegerPost, senhaValida, emitirSessao } from "../lib/conta.js";
 
 const sql = neon(process.env.DATABASE_URL);
 
@@ -25,13 +25,14 @@ export default async function handler(req, res) {
   }
 
   try {
+    protegerPost(req);
     const token = pegarCookie(req, "session");
 
     if (!token) {
       return res.status(401).json({ erro: "Você precisa estar logado" });
     }
 
-    const dadosToken = jwt.verify(token, process.env.JWT_SECRET);
+    const dadosToken = await validarTokenSessao(token);
 
     const { senhaAtual, novaSenha, confirmarSenha } = req.body;
 
@@ -65,19 +66,24 @@ export default async function handler(req, res) {
       return res.status(401).json({ erro: "Senha atual incorreta" });
     }
 
-    const novaSenhaHash = await bcrypt.hash(novaSenha, 10);
+    senhaValida(novaSenha);
+    const novaSenhaHash = await bcrypt.hash(novaSenha, 12);
 
-    await sql`
+    const [atualizado] = await sql`
       UPDATE usuarios
-      SET senha_hash = ${novaSenhaHash}
-      WHERE id = ${dadosToken.id}
+      SET senha_hash = ${novaSenhaHash}, versao_sessao = versao_sessao + 1
+      WHERE id = ${dadosToken.id} AND versao_sessao = ${dadosToken.versao_sessao}
+      RETURNING *
     `;
+    if (!atualizado) return res.status(409).json({ erro: "Sua sessão mudou. Entre novamente." });
+    emitirSessao(res, atualizado);
 
     return res.status(200).json({
       mensagem: "Senha alterada com sucesso"
     });
   } catch (erro) {
-    console.error(erro);
+    if (erro.status) return res.status(erro.status).json({ erro: erro.message === "NAO_LOGADO" ? "Entre novamente." : erro.message });
+    console.error("Erro ao alterar senha");
     return res.status(500).json({ erro: "Erro ao alterar senha" });
   }
 }

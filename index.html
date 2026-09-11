@@ -8,6 +8,7 @@
 
   <link rel="stylesheet" href="css/style.css?v=8" />
   <link rel="stylesheet" href="css/perfil.css?v=2" />
+  <link rel="stylesheet" href="css/conta.css?v=1" />
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 
@@ -61,7 +62,8 @@
       </button>
       <div id="menuUsuario" class="menu-usuario" aria-label="Opções do perfil">
         <button type="button" onclick="abrirResumoPerfil()">📋 Resumo da conta</button>
-        <button type="button" onclick="fecharMenuPerfil(); abrirModalSenha()">🔑 Resetar senha</button>
+        <button type="button" onclick="fecharMenuPerfil(); abrirModalSenha()">🔑 Alterar senha</button>
+        <button type="button" onclick="fecharMenuPerfil(); abrirContaDialog('vincular')">✉ E-mail da conta</button>
         <button type="button" class="perfil-sair" onclick="sairConta()">Sair da conta</button>
       </div>
     </div>
@@ -84,7 +86,8 @@
             </button>
 
             <div id="painelSolicitacoes" class="painel-solicitacoes">
-              <h3>Solicitações de conta</h3>
+              <h3>Cadastros confirmados</h3>
+              <button type="button" onclick="carregarSolicitacoesPendentes()">Atualizar avisos</button>
               <div id="listaSolicitacoes"></div>
             </div>
           </div>
@@ -128,7 +131,7 @@
     <div id="modalSenha" class="modal-senha-overlay" style="display:none;">
       <div class="modal-senha">
         <div class="modal-senha-header">
-          <h3>Resetar senha</h3>
+          <h3>Alterar senha</h3>
           <button type="button" onclick="fecharModalSenha()">×</button>
         </div>
 
@@ -930,8 +933,9 @@
         <script src="js/gastos-fixos.js?v=7"></script>
         <script src="js/parcelamentos.js?v=8"></script>
         <script src="js/main.js?v=9"></script>
-        <script src="js/auth.js"></script>
+        <script src="js/auth.js?v=email1"></script>
         <script src="js/perfil.js?v=2"></script>
+        <script src="js/conta-ui.js?v=1"></script>
 
 </body>
 
