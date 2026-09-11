@@ -1,0 +1,52 @@
+CONTROLE FINANCEIRO - PARCELAMENTOS
+===================================
+
+ANTES DE PUBLICAR ESTA VERSAO:
+
+1) Faca um backup da base de testes no Neon, se desejar.
+2) Abra o SQL Editor do Neon.
+3) Execute o arquivo:
+   migracao-parcelamento-lancamentos.sql
+4) Somente depois publique esta versao no Vercel.
+
+COMO FUNCIONA
+-------------
+- Em Lancamentos, marque "Compra parcelada?".
+- O campo Valor passa a representar o VALOR TOTAL DA COMPRA.
+- Informe a quantidade de parcelas (2 a 60).
+- Escolha:
+  * Dividir igualmente; ou
+  * Personalizar valores.
+- O sistema gera os vencimentos mes a mes.
+- Cada parcela pode ser marcada como Pago ou Pendente.
+- A soma das parcelas precisa fechar com o valor total da compra.
+
+ABA PARCELAMENTOS
+-----------------
+Mostra:
+- Valor original das compras parceladas;
+- Quanto ja foi pago;
+- Saldo a pagar;
+- Quanto esta pendente no mes atual;
+- Progresso de cada compra;
+- Proxima parcela;
+- Lista completa das parcelas e seus status.
+
+DASHBOARDS
+----------
+Parcelas PENDENTES continuam visiveis em Lancamentos e Parcelamentos,
+mas nao entram como despesa realizada nos dashboards.
+Quando uma parcela e marcada como PAGA, ela passa a entrar nos totais.
+
+TESTES FEITOS NESTA VERSAO
+--------------------------
+- Sintaxe de todos os arquivos JavaScript;
+- Geracao de 10x R$ 400 para uma compra de R$ 4.000;
+- Saldo R$ 3.600 apos marcar R$ 400 como pago;
+- Parcelas com valores personalizados;
+- Divisao com centavos sem perder diferenca;
+- Datas em fim de mes (ex.: 31/01 -> 28/02);
+- Agrupamento das parcelas por compra;
+- Filtro de parcelas pendentes nos dashboards;
+- Payload enviado ao backend;
+- Validacao do endpoint para impedir soma de parcelas diferente do total.

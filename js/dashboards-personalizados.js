@@ -43,7 +43,7 @@
   const section=document.getElementById(id);section.querySelector('.grid')?.remove();
   const e={id,section,dados:[],mes:'',ativo:'resumo',chart:null};estados[id]=e;
   if(id==='comparativo'){
-   const head=document.createElement('div');head.className='card painel-ano';
+   const head=document.createElement('div');head.className='card painel-ano cabecalho-anual';
    const h=document.createElement('h2');h.textContent='Comparativo anual';
    const label=document.createElement('label');label.textContent='Ano ';e.select=document.createElement('select');e.select.setAttribute('aria-label','Ano do comparativo');label.append(e.select);
    e.select.onchange=()=>{ano=Number(e.select.value);montar(e);};head.append(h,label);section.prepend(head);

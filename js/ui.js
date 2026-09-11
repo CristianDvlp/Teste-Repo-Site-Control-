@@ -264,18 +264,13 @@ async function atualizarComparativoComContas(lancamentos) {
 }
 
 function atualizarControleMesDashboard(lancamentos, mesSelecionado = '') {
-  const mesesDisponiveis = obterMesesDisponiveis(lancamentos);
-  const indiceAtual = mesesDisponiveis.indexOf(mesSelecionado);
-
   const label = document.getElementById('mesAtualDashboard');
   const btnAnterior = document.getElementById('btnMesAnterior');
   const btnProximo = document.getElementById('btnMesProximo');
-
   if (!label || !btnAnterior || !btnProximo) return;
-
-  label.textContent = mesSelecionado || 'Sem mês';
-  btnAnterior.disabled = indiceAtual <= 0;
-  btnProximo.disabled = indiceAtual === -1 || indiceAtual >= mesesDisponiveis.length - 1;
+  label.textContent = mesSelecionado;
+  btnAnterior.disabled = false;
+  btnProximo.disabled = false;
 }
 
 function atualizarControleMesLancamentos(lancamentos, mesSelecionado = '') {

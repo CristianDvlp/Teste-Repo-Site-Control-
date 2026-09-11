@@ -14,16 +14,9 @@ let chaveDashboardRenderizada = '';
 let revisaoComparativoRenderizada = -1;
 
 function ajustarMesDashboardSelecionado() {
-  const lancamentosAnaliticos = obterLancamentosAnaliticos();
-  const mesesDisponiveis = obterMesesDisponiveis(lancamentosAnaliticos);
-
-  if (mesesDisponiveis.length === 0) {
-    mesDashboardSelecionado = '';
-    return;
-  }
-
-  if (!mesDashboardSelecionado || !mesesDisponiveis.includes(mesDashboardSelecionado)) {
-    mesDashboardSelecionado = mesesDisponiveis[mesesDisponiveis.length - 1];
+  if (!/^\d{2}\/\d{4}$/.test(mesDashboardSelecionado)) {
+    const hoje = new Date();
+    mesDashboardSelecionado = `${String(hoje.getMonth() + 1).padStart(2, '0')}/${hoje.getFullYear()}`;
   }
 }
 
@@ -442,21 +435,10 @@ async function atualizarTelaCompleta() {
 }
 
 async function mudarMesDashboard(direcao) {
-  const lancamentosAnaliticos = obterLancamentosAnaliticos();
-  const mesesDisponiveis = obterMesesDisponiveis(lancamentosAnaliticos);
-
-  if (mesesDisponiveis.length === 0) return;
-
-  const indiceAtual = mesesDisponiveis.indexOf(mesDashboardSelecionado);
-
-  if (indiceAtual === -1) {
-    mesDashboardSelecionado = mesesDisponiveis[mesesDisponiveis.length - 1];
-  } else {
-    const novoIndice = indiceAtual + direcao;
-    if (novoIndice < 0 || novoIndice >= mesesDisponiveis.length) return;
-    mesDashboardSelecionado = mesesDisponiveis[novoIndice];
-  }
-
+  ajustarMesDashboardSelecionado();
+  const [mes, ano] = mesDashboardSelecionado.split('/').map(Number);
+  const destino = new Date(ano, mes - 1 + direcao, 1);
+  mesDashboardSelecionado = `${String(destino.getMonth() + 1).padStart(2, '0')}/${destino.getFullYear()}`;
   await atualizarDashboardComContas();
 }
 

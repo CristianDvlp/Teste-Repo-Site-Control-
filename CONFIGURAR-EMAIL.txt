@@ -1,0 +1,150 @@
+BASE DE TESTE — CADASTRO, RECUPERAÇÃO E AVISOS
+
+Esta atualização precisa de uma migração no banco e três configurações de
+e-mail. Não publique apenas o HTML/JS: as APIs e a pasta lib também mudaram.
+O site principal não foi alterado. Nenhum e-mail real foi enviado nos testes.
+
+1. PREPARAR O BANCO DE TESTE
+
+Faça um backup do banco antes de atualizar. Confira na Vercel se DATABASE_URL
+aponta para a base de TESTE; um projeto de teste pode estar usando o mesmo banco
+do principal. Se estiver compartilhado, separe a base antes de executar o SQL.
+
+Se você já executou esta migração com sucesso no banco de teste, não precisa
+repetir. Caso ainda não tenha executado, use TODO o arquivo:
+  migracao-contas-email.sql
+
+Ele adiciona colunas e tabelas, sem apagar contas, alterar seus IDs ou tocar
+nos lançamentos. Pode ser executado novamente sem duplicar as estruturas.
+Não execute nenhum dos outros arquivos SQL do projeto para esta atualização.
+
+2. CONFIGURAR O ENVIO
+
+A integração foi preparada com Resend, usando a API HTTPS, sem pacote adicional.
+Crie uma conta no Resend e uma chave de API de envio. Configure um remetente
+autorizado. Para entregar a diferentes pessoas, verifique um domínio seu no
+Resend e use um remetente desse domínio.
+
+O domínio de teste resend.dev só permite envio para o e-mail da própria conta
+Resend. Portanto, sem domínio verificado, faça o teste inicial com esse e-mail.
+Para testar cadastro novo com ele, não o vincule antes a outra conta da base.
+O endereço vercel.app do seu site não substitui um domínio de remetente seu.
+
+Na Vercel, no projeto de TESTE, abra Settings > Environment Variables e adicione:
+
+APP_URL
+  A URL HTTPS fixa do site de teste, sem caminho, parâmetros ou fragmento.
+  Exemplo ilustrativo: https://seu-projeto-teste.vercel.app
+  Use a mesma URL para abrir o site durante os testes.
+
+RESEND_API_KEY
+  Sua chave de API Resend. Guarde apenas na Vercel, nunca no HTML, JS ou GitHub.
+
+EMAIL_FROM
+  Remetente autorizado no Resend.
+  Para teste restrito: Controle Financeiro <onboarding@resend.dev>
+  Com domínio verificado: Controle Financeiro <acesso@SEU-DOMINIO>
+
+Mantenha DATABASE_URL e JWT_SECRET existentes. Selecione o ambiente correto da
+Vercel: o projeto chamado "teste" pode usar o ambiente Production da Vercel.
+Não troque o JWT_SECRET nem cole credenciais na conversa.
+
+TEST_AUTO_LOGIN, TEST_AUTO_LOGIN_USER e TEST_AUTO_APPROVE não são mais usados.
+Pode removê-los do projeto de teste para evitar confusão. O login automático
+foi retirado do código, para que não contorne a recuperação e a confirmação.
+
+3. PUBLICAR NO PROJETO DE TESTE
+
+Copie os arquivos deste ZIP sobre o projeto de TESTE preservando sua pasta .git,
+suas credenciais e seus arquivos locais. Envie as mudanças ao repositório.
+Faça uma nova publicação/redeploy depois de salvar as variáveis da Vercel.
+Atualize o navegador com Ctrl+F5.
+
+Arquivos alterados:
+  login.html, index.html, js/auth.js
+  api/register.js, api/login.js, api/me.js, api/solicitacoes.js
+  api/alterar-senha.js, api/lancamentos.js, api/gastos-fixos.js
+  api/gastos-fixos-pagar.js, api/agendamentos.js
+
+Arquivos novos:
+  acesso.html, css/conta.css, js/conta-ui.js, js/acesso.js
+  api/conta.js, lib/conta.js, migracao-contas-email.sql
+  CONFIGURAR-EMAIL.txt
+
+Não houve alteração de dependências ou lockfile.
+
+4. COMO FUNCIONA
+
+Novas contas:
+- Criar conta pede nome, e-mail e senha. Nomes iguais são permitidos, e-mail não.
+- A pessoa recebe um link válido por 24 horas.
+- Ao abrir, define/confirma a senha que será usada na conta e confirma o e-mail.
+  Isso evita que um cadastro iniciado por outra pessoa imponha uma senha ao
+  verdadeiro dono do e-mail. O link não é consumido só de abrir a página.
+- A conta é ativada automaticamente; não há aprovação do ADM.
+- O ADM recebe um aviso no sininho somente depois da confirmação.
+- Cada administrador pode marcar seu aviso como lido; isso fica no banco.
+- O sininho atualiza ao entrar, ao abri-lo, pelo botão Atualizar avisos e a cada
+  minuto enquanto a página do administrador estiver visível.
+
+Contas antigas já aprovadas:
+- Continuam usando o usuário e a senha existentes enquanto não houver e-mail.
+- Perfil > E-mail da conta permite vincular um e-mail, informando a senha atual.
+- O vínculo só acontece após confirmar o link enviado. Depois, o login aceita o usuário cadastrado ou o
+  e-mail; os mesmos ID, dados e permissões da conta são preservados.
+- Confirmar o vínculo encerra sessões antigas e pede um novo login.
+- Contas antigas sem e-mail que já esqueceram a senha precisam de atendimento
+  do administrador para recuperar acesso e então vincular o endereço.
+- Contas antigas pendentes/recusadas não são aprovadas automaticamente pela
+  migração. Regularize individualmente após verificar o dono da conta; não use
+  uma atualização em massa. O fluxo novo não altera restrições dessas contas.
+- Nesta versão o vínculo é inicial. Não há troca autônoma de e-mail já verificado.
+
+Recuperação:
+- Esqueci minha senha envia link apenas para e-mail confirmado de conta ativa.
+- O link vale 30 minutos, pode ser usado uma vez e não exige a senha antiga.
+- Redefinir a senha encerra as sessões anteriores em todas as APIs autenticadas.
+- Pedir outro link da mesma finalidade invalida o anterior.
+- Respostas públicas de recuperação/reenvio não revelam se o e-mail tem conta.
+- Há limites por IP e por e-mail/usuário no banco; aguarde 15 minutos ao atingir
+  o limite. Alterar IP não remove o limite associado ao endereço.
+
+5. TESTE APÓS A PUBLICAÇÃO
+
+1) Entre com sua conta ADM antiga; verifique seus lançamentos.
+2) Em janela anônima, cadastre um e-mail permitido pelo Resend.
+3) Antes de confirmar, confirme que o login não libera acesso.
+4) Abra o e-mail, defina a senha e confirme. Entre; a conta deve começar vazia.
+5) No ADM, atualize o sininho e marque o aviso como lido. Recarregue e confira.
+6) Peça recuperação, defina outra senha e confira que a anterior não funciona.
+7) Reabra o mesmo link: ele deve informar que já foi usado ou expirou.
+8) Na conta antiga, vincule outro e-mail e confira que os dados foram mantidos.
+
+Se não receber e-mail: confira spam, remetente, ambiente das variáveis e os logs
+de envio no Resend. A tela não confirma existência de conta na recuperação.
+Se faltar configuração, a API informa indisponibilidade; não libera o cadastro
+sem confirmação. Reenvie o link depois de corrigir a configuração.
+
+VALIDAÇÃO REALIZADA AQUI
+APIs executadas com PostgreSQL local em memória (PGlite), JWT e bcrypt reais;
+somente transporte de e-mail simulado. Foram conferidos migração repetível,
+cadastro, confirmação concorrente, uso único/expiração, recuperação, revogação,
+vínculo antigo preservando ID, separação de lançamentos, avisos por ADM,
+troca de senha autenticada, origem, limites de tentativas e falha de envio.
+Também foram conferidas sintaxe e referências locais.
+Entrega real dos e-mails, layout no navegador e publicação Vercel precisam
+ser conferidos no ambiente de teste após a configuração acima.
+
+REFERÊNCIAS
+API de envio: https://resend.com/docs/api-reference/emails/send-email
+Restrição de remetente de teste: https://resend.com/docs/knowledge-base/403-error-resend-dev-domain
+Recuperação: https://cheatsheetseries.owasp.org/cheatsheets/Forgot_Password_Cheat_Sheet.html
+
+ATUALIZAÇÃO: USUÁRIO OU E-MAIL E ERROS
+- Usuários antigos continuam entrando pelo usuário mesmo após vincular e-mail.
+  Use a mesma grafia do usuário cadastrado; o e-mail ignora maiúsculas/minúsculas.
+- O nome exibido no perfil não é necessariamente o usuário de login.
+- Um e-mail só pode pertencer a uma conta, inclusive durante cadastro pendente.
+  O índice único da migração anterior já garante essa regra no banco.
+- Erros de login, cadastro, vínculo, confirmação e troca de senha ficam vermelhos.
+- Se já executou a migração anterior, não precisa de SQL adicional.
