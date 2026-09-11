@@ -15,14 +15,16 @@
     </form>`;
   document.body.appendChild(dialog);
   const el = id => document.getElementById(id);
-  let modo = 'cadastro';
+  let modo = 'cadastro', emailPendente = '';
+  function mostrarReenvio(email) { emailPendente=email; const b=el('reenviarConfirmacao'); if(b)b.hidden=false; }
+  el('usuario')?.addEventListener('input',()=>{ const b=el('reenviarConfirmacao'); if(b)b.hidden=true; emailPendente=''; });
   dialog.querySelector('.conta-fechar').addEventListener('click', () => dialog.close());
   dialog.addEventListener('close', () => el('contaForm').reset());
 
   async function pedir(url, dados) {
     const r = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(dados) });
     const body = await r.json().catch(() => ({}));
-    if (!r.ok) throw new Error(body.erro || 'Não foi possível concluir. Tente novamente.');
+    if (!r.ok) { if(body.confirmacaoPendente) mostrarReenvio(body.email); throw new Error(body.erro || 'Não foi possível concluir. Tente novamente.'); }
     return body;
   }
 
@@ -56,6 +58,7 @@
       el('contaSenha').required = false;
       el('contaEnviar').hidden = true;
     }
+    if(modo === 'reenviar') el('contaEmail').value=emailPendente;
     dialog.showModal();
   };
 
@@ -71,6 +74,7 @@
       const body = await pedir(modo === 'cadastro' ? '/api/register' : '/api/conta', {
         acao: modo, nome: el('contaNome').value.trim(), email: el('contaEmail').value.trim(), senha
       });
+      if(modo === 'cadastro') mostrarReenvio(el('contaEmail').value.trim());
       el('contaStatus').classList.toggle('mensagem-erro', false); el('contaStatus').textContent = body.mensagem;
       el('contaSenha').value = '';
       el('contaConfirmar').value = '';

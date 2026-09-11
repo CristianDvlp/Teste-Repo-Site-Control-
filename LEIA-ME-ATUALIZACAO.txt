@@ -1,0 +1,48 @@
+ATUALIZAÇÃO CONSOLIDADA — SENHAS E DASHBOARDS
+
+1. NO BANCO DE TESTE
+Execute apenas o novo arquivo migracao-dashboards.sql:
+ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS dashboard_preferencias jsonb;
+Não precisa repetir a migração de e-mail já executada. Não execute o arquivo
+estrutura-financeiro.sql para atualizar. A nova coluna guarda as escolhas de
+dashboards por usuário, sem alterar os lançamentos.
+
+2. PUBLICAR
+Copie todo o conteúdo deste ZIP sobre os fontes do projeto de TESTE. Preserve
+sua pasta .git e suas configurações locais. Envie ao GitHub, aguarde a publicação
+na Vercel e pressione Ctrl+F5. As variáveis de e-mail continuam as mesmas.
+
+CHECKLIST IMPLEMENTADO
+[x] Reenvio oculto na tela inicial; aparece após cadastro ou senha correta em
+    uma conta não confirmada. Contas confirmadas não recebem novo link.
+[x] Senha atual validada ao sair do campo, com borda/mensagem vermelhas.
+[x] Nova senha diferente da atual, verificada no servidor ao trocar e recuperar.
+[x] X centralizado no botão de fechar.
+[x] Comparativo anual com seletor de ano e janeiro a dezembro.
+[x] 24 opções de dashboard disponíveis nas abas mensal e anual.
+[x] Personalização por usuário, salva no banco e disponível em outros aparelhos.
+[x] Prévia imediata, salvar, cancelar, marcar todos, limpar e restaurar padrão.
+[x] Descrições, estados vazios e carregamento de um gráfico por aba.
+
+Os totais anuais e mensais consideram os lançamentos até hoje e as parcelas
+marcadas como pagas. Parcelas pendentes têm uma análise separada, inclusive
+futuras, pela data de cada parcela. Os anos disponíveis incluem o ano atual e
+os anos com lançamentos. Receitas não incluem saldo inicial; resultado é receita
+menos despesa e não inclui vales. Resultado acumulado não representa patrimônio.
+Categorias ignoradas pelo projeto continuam excluídas das análises.
+O nome de usuário cadastrado continua válido após confirmar o e-mail.
+
+TESTES
+APIs verificadas com PostgreSQL local em memória, bcrypt e JWT reais e e-mail
+simulado: validação antecipada, recusa de senha repetida, preferência isolada por
+usuário, recuperação, unicidade do e-mail e revogação de sessões. Conferidos os
+24 cálculos de gráficos, acumulados e percentual sem receita. Sintaxe e caminhos
+locais validados. O navegador de testes não ficou disponível neste ambiente;
+conferir o layout e a renderização real do Chart.js após publicar.
+
+TESTE NO SEU SITE
+- Trocar de ano deve atualizar os quatro totais e o gráfico.
+- Personalizar: desmarcar, cancelar, salvar e abrir em outro aparelho.
+- Sair de Senha atual errada deve mostrar erro sem salvar; senha nova igual
+  à atual deve ser rejeitada. Testar também pelo link de recuperação.
+- Confirmar que login por usuário/e-mail e os lançamentos antigos continuam.

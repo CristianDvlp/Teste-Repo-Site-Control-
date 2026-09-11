@@ -6,6 +6,16 @@ export default async function handler(req,res) {
  try {
   protegerPost(req);
   const {acao}=req.body || {};
+  if(acao === 'preferencias-carregar' || acao === 'preferencias-salvar') {
+   const u=await sessao(req);
+   if(acao === 'preferencias-salvar') {
+    const v=req.body.preferencias;
+    if(!v || !['dashboard','comparativo'].every(k=>Array.isArray(v[k]) && v[k].length<=40 && v[k].every(x=>typeof x==='string' && /^[a-z_]{1,40}$/.test(x)))) throw falha(400,'Seleção inválida.');
+    await sql`UPDATE usuarios SET dashboard_preferencias=${JSON.stringify({dashboard:v.dashboard,comparativo:v.comparativo})}::jsonb WHERE id=${u.id}`;
+   }
+   const [row]=await sql`SELECT dashboard_preferencias FROM usuarios WHERE id=${u.id}`;
+   return res.status(200).json({preferencias:row.dashboard_preferencias});
+  }
   if(acao === 'recuperar' || acao === 'reenviar') {
    exigirEmailConfigurado();
    const email=emailValido(req.body.email);
@@ -38,6 +48,10 @@ export default async function handler(req,res) {
   if(finalidade !== 'vincular') {
    const senha=senhaValida(req.body.senha);
    if(senha !== req.body.confirmarSenha) throw falha(400,'As senhas não conferem.');
+   if(finalidade === 'senha') {
+    const [anterior]=await sql`SELECT u.senha_hash FROM usuarios u JOIN conta_tokens t ON t.usuario_id=u.id WHERE t.token_hash=${hashToken(token)} AND t.finalidade='senha' AND t.usado_em IS NULL AND t.expira_em>now() AND t.versao_sessao=u.versao_sessao`;
+    if(anterior && await bcrypt.compare(senha,anterior.senha_hash)) throw falha(400,'A nova senha deve ser diferente da atual.');
+   }
    senhaHash=await bcrypt.hash(senha,12);
   }
   // Uma única instrução garante uso único e atualização/notificação atômicos.

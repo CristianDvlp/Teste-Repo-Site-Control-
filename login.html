@@ -5,8 +5,8 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Login - Teste - Controle Financeiro</title>
-  <link rel="stylesheet" href="css/login.css" />
-  <link rel="stylesheet" href="css/conta.css?v=email2" />
+  <link rel="stylesheet" href="css/login.css?v=consolidado3" />
+  <link rel="stylesheet" href="css/conta.css?v=consolidado3" />
 </head>
 
 <body>
@@ -63,7 +63,7 @@
         <button class="btn-primary" type="submit">Entrar</button>
         <button class="btn-secondary" type="button" onclick="abrirContaDialog('cadastro')">Criar conta</button>
         <button class="conta-link" type="button" onclick="abrirContaDialog('recuperar')">Esqueci minha senha</button>
-        <button class="conta-link" type="button" onclick="abrirContaDialog('reenviar')">Reenviar confirmação de e-mail</button>
+        <button id="reenviarConfirmacao" hidden class="conta-link" type="button" onclick="abrirContaDialog('reenviar')">Reenviar confirmação de e-mail</button>
 
         <p id="loginStatus" class="login-status" role="status"></p>
       </form>
@@ -73,8 +73,8 @@
       © 2026 Controle Financeiro. Todos os direitos estão reservados.
     </div>
   </div>
-  <script src="js/auth.js?v=email2"></script>
-  <script src="js/conta-ui.js?v=email2"></script>
+  <script src="js/auth.js?v=consolidado3"></script>
+  <script src="js/conta-ui.js?v=consolidado3"></script>
   <script>
     function togglePassword() {
       const senhaInput = document.getElementById("senha");

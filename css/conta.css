@@ -24,3 +24,20 @@ body:has(.login-page) { overflow-y: auto; }
 /* Erros com contraste adequado em superfícies claras e no login escuro. */
 .conta-status.mensagem-erro, #statusResetSenha.mensagem-erro { color: #b91c1c; }
 .login-card .login-status.mensagem-erro { color: #fca5a5; }
+
+[hidden] { display:none !important; }
+.modal-senha-header button, .conta-fechar { display:inline-flex; align-items:center; justify-content:center; padding:0; line-height:1; flex-shrink:0; }
+.modal-senha input[aria-invalid="true"] { border:2px solid #b91c1c; outline-color:#b91c1c; }
+.senha-campo-erro { color:#b91c1c; font-size:14px; margin:5px 0; }
+.conta-dialog .conta-form { display:block; }
+.painel-ano { display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; }
+.painel-ano h2 { margin:0; font-size:22px; }
+.painel-ano button,.painel-ano select { padding:10px 14px; border:1px solid #cbd5e1; border-radius:8px; cursor:pointer; font-size:14px; }
+.escolhas-dashboard { margin:16px 0; }
+.catalogo-opcoes { display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:10px; }
+.opcao-dashboard { padding:16px; text-align:left; border:1px solid #cbd5e1; border-radius:10px; color:#172033; background:white; cursor:pointer; }
+.opcao-dashboard[aria-pressed=true] { border:2px solid #2563eb; background:#eff6ff; }
+.opcao-dashboard strong,.opcao-dashboard span { display:block; }.opcao-dashboard strong { font-size:16px; }.opcao-dashboard span { margin-top:6px; font-size:14px; line-height:1.4; }
+.grafico-personalizado { position:relative; height:380px; }.catalogo-dialog { width:min(760px,calc(100% - 28px)); }
+.catalogo-lista { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; margin:18px 0; }.catalogo-lista label { display:flex; gap:10px; align-items:flex-start; padding:12px; border:1px solid #e2e8f0; border-radius:8px; cursor:pointer; }.catalogo-lista input { margin-top:4px; }.catalogo-lista strong,.catalogo-lista small { display:block; }.catalogo-lista small { margin-top:5px; font-size:14px; line-height:1.4; }
+@media(max-width:600px){.catalogo-lista{grid-template-columns:1fr}.grafico-personalizado{height:300px}}

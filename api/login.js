@@ -15,7 +15,7 @@ export default async function handler(req,res) {
   const correta=await bcrypt.compare(senha,hash);
   if (!u || !correta) throw falha(401,'E-mail/usuário ou senha inválidos.');
   if (u.status === 'recusado') throw falha(403,'Esta conta não está autorizada.');
-  if (u.email && !u.email_confirmado) throw falha(403,'Confirme seu e-mail. Se precisar, use Reenviar confirmação.');
+  if (u.email && !u.email_confirmado) return res.status(403).json({erro:'Confirme seu e-mail para entrar.',confirmacaoPendente:true,email:u.email});
   if (u.status !== 'aprovado') throw falha(403,'Conta antiga pendente: entre em contato com o administrador para regularizar o acesso.');
   emitirSessao(res,u); return res.status(200).json({mensagem:'Login feito com sucesso.'});
  } catch(erro) { return responderErro(res,erro); }
