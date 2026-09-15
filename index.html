@@ -1,622 +1,1061 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Teste - Controle Financeiro</title>
 
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Teste - Controle Financeiro</title>
+    <link rel="stylesheet" href="css/style.css?v=metas2" />
+    <link rel="stylesheet" href="css/perfil.css?v=metas2" />
+    <link rel="stylesheet" href="css/conta.css?v=metas2" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="css/metas.css?v=metas3" />
+    <link rel="icon" type="image/png" href="./favicon.png" />
+  </head>
 
-  <link rel="stylesheet" href="css/style.css?v=metas2" />
-  <link rel="stylesheet" href="css/perfil.css?v=metas2" />
-  <link rel="stylesheet" href="css/conta.css?v=metas2" />
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <link rel="stylesheet" href="css/metas.css?v=metas2">
-  <link rel="icon" type="image/png" href="./favicon.png">
-</head>
+  <body>
+    <canvas id="backgroundFx" class="background-fx" aria-hidden="true"></canvas>
 
-<body>
-
-  <canvas id="backgroundFx" class="background-fx" aria-hidden="true"></canvas>
-
-  <aside class="sidebar-hover">
-    <div class="sidebar-brand">
-      <span class="sidebar-icon">💰</span>
-      <span class="sidebar-text">Menu</span>
-    </div>
-
-    <nav class="sidebar-nav">
-      <button class="sidebar-link active" type="button" data-tab-target="lancamentos">
-        <span class="sidebar-icon">📝</span>
-        <span class="sidebar-text">Lançamentos</span>
-      </button>
-
-
-      <button class="sidebar-link" type="button" data-tab-target="gastosFixos">
-        <span class="sidebar-icon">💳</span>
-        <span class="sidebar-text">Gastos fixos</span>
-      </button>
-
-      <button class="sidebar-link" type="button" data-tab-target="dashboard">
-        <span class="sidebar-icon">📊</span>
-        <span class="sidebar-text">Dashboard do mês</span>
-      </button>
-
-      <button class="sidebar-link" type="button" data-tab-target="comparativo">
-        <span class="sidebar-icon">📈</span>
-        <span class="sidebar-text">Comparativo anual</span>
-      </button>
-
-      <button class="sidebar-link" type="button" data-tab-target="metas">
-        <span class="sidebar-icon">🎯</span>
-        <span class="sidebar-text">Metas anuais e mensais</span>
-      </button>
-
-    </nav>
-    <div class="usuario-menu-wrap perfil-sidebar">
-      <button id="botaoPerfil" class="perfil-botao" type="button" onclick="toggleMenuUsuario()" aria-label="Abrir perfil" aria-expanded="false" aria-controls="menuUsuario">
-        <span class="perfil-avatar" aria-hidden="true">👤</span>
-        <span class="sidebar-text perfil-identidade"><strong id="nomeUsuarioHeader">Usuário</strong><small>Meu perfil</small></span>
-        <span class="sidebar-text" aria-hidden="true">▴</span>
-      </button>
-      <div id="menuUsuario" class="menu-usuario" aria-label="Opções do perfil">
-        <button type="button" onclick="abrirResumoPerfil()">📋 Resumo da conta</button>
-        <button type="button" onclick="fecharMenuPerfil(); abrirModalSenha()">🔑 Alterar senha</button>
-        <button type="button" onclick="fecharMenuPerfil(); abrirContaDialog('vincular')">✉ E-mail da conta</button>
-        <button type="button" class="perfil-sair" onclick="sairConta()">Sair da conta</button>
+    <aside class="sidebar-hover">
+      <div class="sidebar-brand">
+        <span class="sidebar-icon">💰</span>
+        <span class="sidebar-text">Menu</span>
       </div>
-    </div>
-  </aside>
 
-  <div class="main-layout">
-    <header>
-      <div class="header-top">
-        <div>
-          <h1>Teste - Controle Financeiro</h1>
-          <p>Lançamentos financeiros + dashboard integrado</p>
+      <nav class="sidebar-nav">
+        <button
+          class="sidebar-link active"
+          type="button"
+          data-tab-target="lancamentos"
+        >
+          <span class="sidebar-icon">📝</span>
+          <span class="sidebar-text">Lançamentos</span>
+        </button>
+
+        <button
+          class="sidebar-link"
+          type="button"
+          data-tab-target="gastosFixos"
+        >
+          <span class="sidebar-icon">💳</span>
+          <span class="sidebar-text">Gastos fixos</span>
+        </button>
+
+        <button class="sidebar-link" type="button" data-tab-target="dashboard">
+          <span class="sidebar-icon">📊</span>
+          <span class="sidebar-text">Dashboard do mês</span>
+        </button>
+
+        <button
+          class="sidebar-link"
+          type="button"
+          data-tab-target="comparativo"
+        >
+          <span class="sidebar-icon">📈</span>
+          <span class="sidebar-text">Comparativo anual</span>
+        </button>
+
+        <button class="sidebar-link" type="button" data-tab-target="metas">
+          <span class="sidebar-icon">🎯</span>
+          <span class="sidebar-text">Metas anuais e mensais</span>
+        </button>
+      </nav>
+      <div class="usuario-menu-wrap perfil-sidebar">
+        <button
+          id="botaoPerfil"
+          class="perfil-botao"
+          type="button"
+          onclick="toggleMenuUsuario()"
+          aria-label="Abrir perfil"
+          aria-expanded="false"
+          aria-controls="menuUsuario"
+        >
+          <span class="perfil-avatar" aria-hidden="true">👤</span>
+          <span class="sidebar-text perfil-identidade"
+            ><strong id="nomeUsuarioHeader">Usuário</strong
+            ><small>Meu perfil</small></span
+          >
+          <span class="sidebar-text" aria-hidden="true">▴</span>
+        </button>
+        <div
+          id="menuUsuario"
+          class="menu-usuario"
+          aria-label="Opções do perfil"
+        >
+          <button type="button" onclick="abrirResumoPerfil()">
+            📋 Resumo da conta
+          </button>
+          <button
+            type="button"
+            onclick="
+              fecharMenuPerfil();
+              abrirModalSenha();
+            "
+          >
+            🔑 Alterar senha
+          </button>
+          <button
+            type="button"
+            onclick="
+              fecharMenuPerfil();
+              abrirContaDialog('vincular');
+            "
+          >
+            ✉ E-mail da conta
+          </button>
+          <button type="button" class="perfil-sair" onclick="sairConta()">
+            Sair da conta
+          </button>
         </div>
+      </div>
+    </aside>
 
-        <div class="header-user-area">
+    <div class="main-layout">
+      <header>
+        <div class="header-top">
+          <div>
+            <h1>Teste - Controle Financeiro</h1>
+            <p>Lançamentos financeiros + dashboard integrado</p>
+          </div>
 
-          <div id="solicitacoesWrap" class="solicitacoes-wrap" style="display:none;">
-            <button class="btn-solicitacoes" type="button" onclick="togglePainelSolicitacoes()">
-              🔔
-              <span id="qtdSolicitacoes">0</span>
+          <div class="header-user-area">
+            <div
+              id="solicitacoesWrap"
+              class="solicitacoes-wrap"
+              style="display: none"
+            >
+              <button
+                class="btn-solicitacoes"
+                type="button"
+                onclick="togglePainelSolicitacoes()"
+              >
+                🔔
+                <span id="qtdSolicitacoes">0</span>
+              </button>
+
+              <div id="painelSolicitacoes" class="painel-solicitacoes">
+                <h3>Cadastros confirmados</h3>
+                <button type="button" onclick="carregarSolicitacoesPendentes()">
+                  Atualizar avisos
+                </button>
+                <div id="listaSolicitacoes"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </header>
+      <dialog
+        id="resumoPerfil"
+        class="perfil-dialog"
+        aria-labelledby="tituloResumoPerfil"
+      >
+        <div class="perfil-cabecalho">
+          <div>
+            <p id="perfilNomeResumo" class="perfil-legenda"></p>
+            <h2 id="tituloResumoPerfil">Resumo da conta</h2>
+          </div>
+          <button
+            type="button"
+            class="perfil-icone"
+            onclick="document.getElementById('resumoPerfil').close()"
+            aria-label="Fechar resumo"
+          >
+            ×
+          </button>
+        </div>
+        <div class="perfil-filtros">
+          <label for="perfilPeriodo"
+            >Período
+            <select id="perfilPeriodo">
+              <option value="mes">Este mês</option>
+              <option value="30dias">Últimos 30 dias</option>
+              <option value="ano">Este ano</option>
+              <option value="tudo">Todo o período</option>
+            </select>
+          </label>
+          <button
+            type="button"
+            id="perfilOlho"
+            class="perfil-icone"
+            aria-label="Mostrar valores"
+            aria-pressed="false"
+          ></button>
+        </div>
+        <p id="perfilStatus" role="status" class="perfil-legenda"></p>
+        <button
+          id="perfilPersonalizar"
+          class="perfil-personalizar"
+          type="button"
+          aria-expanded="false"
+          aria-controls="perfilEditor"
+        >
+          ⚙ Personalizar resumo
+        </button>
+        <section
+          id="perfilEditor"
+          class="perfil-editor"
+          aria-labelledby="perfilEditorTitulo"
+          hidden
+        >
+          <h3 id="perfilEditorTitulo">O que você quer ver?</h3>
+          <p>
+            Marque as informações que deseja exibir. Sua escolha fica salva para
+            seu usuário neste navegador.
+          </p>
+          <div class="perfil-editor-atalhos">
+            <button type="button" id="perfilMarcarTodos">Marcar todos</button>
+            <button type="button" id="perfilDesmarcarTodos">
+              Desmarcar todos
             </button>
+            <button type="button" id="perfilRestaurar">Restaurar padrão</button>
+          </div>
+          <div id="perfilOpcoes"></div>
+          <div class="perfil-editor-acoes">
+            <button type="button" id="perfilCancelar">Cancelar</button>
+            <button type="button" id="perfilSalvar" class="perfil-salvar">
+              Salvar preferências
+            </button>
+          </div>
+        </section>
+        <p
+          id="perfilPreferenciasStatus"
+          class="perfil-legenda"
+          role="status"
+        ></p>
+        <div id="perfilIndicadores" class="perfil-grid"></div>
+        <p id="perfilComparacao" class="perfil-comparacao"></p>
+        <p class="perfil-nota">
+          Valores consideram os lançamentos até hoje. Vales aparecem separados e
+          não entram no resultado. Contas fixas ainda não lançadas não entram
+          neste resumo.
+        </p>
+        <button type="button" id="perfilTentar" class="btn-secondary" hidden>
+          Tentar carregar novamente
+        </button>
+      </dialog>
+      <div id="modalSenha" class="modal-senha-overlay" style="display: none">
+        <div class="modal-senha">
+          <div class="modal-senha-header">
+            <h3>Alterar senha</h3>
+            <button type="button" onclick="fecharModalSenha()">×</button>
+          </div>
 
-            <div id="painelSolicitacoes" class="painel-solicitacoes">
-              <h3>Cadastros confirmados</h3>
-              <button type="button" onclick="carregarSolicitacoesPendentes()">Atualizar avisos</button>
-              <div id="listaSolicitacoes"></div>
+          <label>
+            <span>Senha atual</span>
+            <input
+              id="senhaAtualReset"
+              type="password"
+              placeholder="Digite sua senha atual"
+              autocomplete="current-password"
+            />
+          </label>
+
+          <label>
+            <span>Nova senha</span>
+            <input
+              id="novaSenhaReset"
+              type="password"
+              placeholder="Digite a nova senha"
+              autocomplete="new-password"
+            />
+          </label>
+
+          <label>
+            <span>Confirmar nova senha</span>
+            <input
+              id="confirmarSenhaReset"
+              type="password"
+              placeholder="Confirme a nova senha"
+              autocomplete="new-password"
+            />
+          </label>
+
+          <p id="statusResetSenha" class="status-reset-senha"></p>
+
+          <div class="modal-senha-actions">
+            <button
+              class="btn-secondary"
+              type="button"
+              onclick="fecharModalSenha()"
+            >
+              Cancelar
+            </button>
+            <button class="btn-primary" type="button" onclick="alterarSenha()">
+              Salvar nova senha
+            </button>
+          </div>
+        </div>
+      </div>
+      <div class="container">
+        <div class="tabs">
+          <button class="tab-btn active" data-tab="lancamentos" type="button">
+            Lançamentos
+          </button>
+          <button class="tab-btn" data-tab="gastosFixos" type="button">
+            Gastos fixos
+          </button>
+          <button class="tab-btn" data-tab="dashboard" type="button">
+            Dashboard do mês
+          </button>
+          <button class="tab-btn" data-tab="comparativo" type="button">
+            Comparativo anual
+          </button>
+          <button class="tab-btn" data-tab="metas" type="button">
+            Metas anuais e mensais
+          </button>
+        </div>
+
+        <section id="lancamentos" class="tab-content active">
+          <div class="card card-destaque novo-lancamento-hover">
+            <div class="novo-lancamento-hover__topo">
+              <h2 id="tituloFormularioLancamento">Novo lançamento</h2>
+            </div>
+
+            <div class="novo-lancamento-hover__conteudo">
+              <div class="info">
+                O lançamento possui estes campos:
+                <strong
+                  >Data, Tipo, Descrição, Categoria, Valor e Tipo de
+                  Pagamento</strong
+                >. Registre suas receitas, despesas e vales de forma simples.
+              </div>
+
+              <form id="financeForm" class="form-grid">
+                <label for="data">
+                  <span id="dataLabelText">Data</span>
+                  <input
+                    type="text"
+                    id="data"
+                    name="data"
+                    inputmode="numeric"
+                    maxlength="10"
+                    autocomplete="off"
+                    required
+                  />
+                </label>
+
+                <label for="tipo">
+                  <span>Tipo</span>
+                  <select id="tipo" name="tipo" required>
+                    <option value="Receita">Receita</option>
+                    <option value="Despesa">Despesa</option>
+                    <option value="Vales">Vales</option>
+                  </select>
+                </label>
+
+                <label for="descricao">
+                  <span>Descrição</span>
+                  <input
+                    type="text"
+                    id="descricao"
+                    name="descricao"
+                    placeholder="Digite a descrição"
+                    autocomplete="off"
+                  />
+                </label>
+
+                <label for="categoria">
+                  <span>Categoria</span>
+                  <input
+                    type="text"
+                    id="categoria"
+                    name="categoria"
+                    list="categoriaSugestoes"
+                    placeholder="Digite ou selecione uma categoria"
+                    autocomplete="off"
+                    required
+                  />
+                  <datalist id="categoriaSugestoes"></datalist>
+                </label>
+
+                <label for="valor">
+                  <span id="valorLabelText">Valor</span>
+                  <input
+                    type="text"
+                    id="valor"
+                    name="valor"
+                    inputmode="decimal"
+                    placeholder="R$ 0,00"
+                    autocomplete="off"
+                    required
+                  />
+                </label>
+
+                <label for="pagamento">
+                  <span>Tipo de pagamento</span>
+                  <select id="pagamento" name="pagamento" required>
+                    <option value="">Selecione</option>
+                    <option value="PIX">Pix</option>
+                    <option value="DEBITO">Debito</option>
+                    <option value="DINHEIRO">Dinheiro</option>
+                    <option value="CREDITO">Credito</option>
+                    <option value="CARTÃO A">Cartão A</option>
+                    <option value="Cartão P">Cartão P</option>
+                  </select>
+                </label>
+              </form>
+
+              <div class="actions">
+                <button class="btn-primary" id="btnSalvar" type="button">
+                  Salvar lançamento
+                </button>
+                <button class="btn-success" id="btnAtualizar" type="button">
+                  Atualizar dados
+                </button>
+                <button
+                  class="btn-secondary"
+                  id="btnResetarFormulario"
+                  type="button"
+                >
+                  Resetar campos
+                </button>
+                <button
+                  class="btn-warning"
+                  id="btnAgendarLancamento"
+                  type="button"
+                >
+                  Agendar lançamento
+                </button>
+              </div>
+
+              <div class="status" id="statusBox" aria-live="polite">
+                Aguardando dados no banco.
+              </div>
+              <div
+                id="painelAgendamento"
+                class="card card-spacing agendamento-card"
+                style="display: none"
+              >
+                <h3>Agendar lançamento</h3>
+
+                <div class="form-grid">
+                  <label>
+                    <span>Quando lançar</span>
+                    <select id="agendamentoModo">
+                      <option value="data_especifica">Data específica</option>
+                      <option value="proxima_semana">Na semana que vem</option>
+                      <option value="mes_que_vem_dia">
+                        Dia do mês que vem
+                      </option>
+                    </select>
+                  </label>
+
+                  <label id="agendamentoDataWrap">
+                    <span>Data agendada</span>
+                    <input
+                      type="text"
+                      id="agendamentoData"
+                      inputmode="numeric"
+                      maxlength="10"
+                      placeholder="dd/mm/aaaa"
+                      autocomplete="off"
+                    />
+                  </label>
+
+                  <label id="agendamentoDiaWrap" style="display: none">
+                    <span>Dia do mês que vem</span>
+                    <input
+                      type="number"
+                      id="agendamentoDiaMes"
+                      min="1"
+                      max="31"
+                      placeholder="13"
+                      autocomplete="off"
+                    />
+                  </label>
+                </div>
+
+                <div class="actions">
+                  <button
+                    class="btn-primary"
+                    id="btnConfirmarAgendamento"
+                    type="button"
+                  >
+                    Salvar agendamento
+                  </button>
+                </div>
+
+                <div class="card card-spacing">
+                  <h3>Lançamentos agendados</h3>
+                  <div id="listaAgendamentos" class="agendamentos-lista"></div>
+                </div>
+              </div>
             </div>
           </div>
 
-        </div>
-      </div>
-    </header>
-    <dialog id="resumoPerfil" class="perfil-dialog" aria-labelledby="tituloResumoPerfil">
-      <div class="perfil-cabecalho">
-        <div><p id="perfilNomeResumo" class="perfil-legenda"></p><h2 id="tituloResumoPerfil">Resumo da conta</h2></div>
-        <button type="button" class="perfil-icone" onclick="document.getElementById('resumoPerfil').close()" aria-label="Fechar resumo">×</button>
-      </div>
-      <div class="perfil-filtros">
-        <label for="perfilPeriodo">Período
-          <select id="perfilPeriodo"><option value="mes">Este mês</option><option value="30dias">Últimos 30 dias</option><option value="ano">Este ano</option><option value="tudo">Todo o período</option></select>
-        </label>
-        <button type="button" id="perfilOlho" class="perfil-icone" aria-label="Mostrar valores" aria-pressed="false"></button>
-      </div>
-      <p id="perfilStatus" role="status" class="perfil-legenda"></p>
-      <button id="perfilPersonalizar" class="perfil-personalizar" type="button" aria-expanded="false" aria-controls="perfilEditor">⚙ Personalizar resumo</button>
-      <section id="perfilEditor" class="perfil-editor" aria-labelledby="perfilEditorTitulo" hidden>
-        <h3 id="perfilEditorTitulo">O que você quer ver?</h3>
-        <p>Marque as informações que deseja exibir. Sua escolha fica salva para seu usuário neste navegador.</p>
-        <div class="perfil-editor-atalhos">
-          <button type="button" id="perfilMarcarTodos">Marcar todos</button>
-          <button type="button" id="perfilDesmarcarTodos">Desmarcar todos</button>
-          <button type="button" id="perfilRestaurar">Restaurar padrão</button>
-        </div>
-        <div id="perfilOpcoes"></div>
-        <div class="perfil-editor-acoes">
-          <button type="button" id="perfilCancelar">Cancelar</button>
-          <button type="button" id="perfilSalvar" class="perfil-salvar">Salvar preferências</button>
-        </div>
-      </section>
-      <p id="perfilPreferenciasStatus" class="perfil-legenda" role="status"></p>
-      <div id="perfilIndicadores" class="perfil-grid"></div>
-      <p id="perfilComparacao" class="perfil-comparacao"></p>
-      <p class="perfil-nota">Valores consideram os lançamentos até hoje. Vales aparecem separados e não entram no resultado. Contas fixas ainda não lançadas não entram neste resumo.</p>
-      <button type="button" id="perfilTentar" class="btn-secondary" hidden>Tentar carregar novamente</button>
-    </dialog>
-    <div id="modalSenha" class="modal-senha-overlay" style="display:none;">
-      <div class="modal-senha">
-        <div class="modal-senha-header">
-          <h3>Alterar senha</h3>
-          <button type="button" onclick="fecharModalSenha()">×</button>
-        </div>
+          <div class="card card-spacing">
+            <h2>Lançamentos cadastrados</h2>
 
-        <label>
-          <span>Senha atual</span>
-          <input id="senhaAtualReset" type="password" placeholder="Digite sua senha atual"
-            autocomplete="current-password" />
-        </label>
+            <div class="lancamentos-controls">
+              <button
+                class="btn-secondary"
+                id="btnLancMesAnterior"
+                type="button"
+              >
+                ← Mês anterior
+              </button>
 
-        <label>
-          <span>Nova senha</span>
-          <input id="novaSenhaReset" type="password" placeholder="Digite a nova senha" autocomplete="new-password" />
-        </label>
+              <div class="lancamentos-month-info">
+                <strong>Mês exibido</strong>
+                <div id="mesAtualLancamentos">Todos</div>
+              </div>
 
-        <label>
-          <span>Confirmar nova senha</span>
-          <input id="confirmarSenhaReset" type="password" placeholder="Confirme a nova senha"
-            autocomplete="new-password" />
-        </label>
-
-        <p id="statusResetSenha" class="status-reset-senha"></p>
-
-        <div class="modal-senha-actions">
-          <button class="btn-secondary" type="button" onclick="fecharModalSenha()">Cancelar</button>
-          <button class="btn-primary" type="button" onclick="alterarSenha()">Salvar nova senha</button>
-        </div>
-      </div>
-    </div>
-    <div class="container">
-      <div class="tabs">
-        <button class="tab-btn active" data-tab="lancamentos" type="button">Lançamentos</button>
-        <button class="tab-btn" data-tab="gastosFixos" type="button">Gastos fixos</button>
-        <button class="tab-btn" data-tab="dashboard" type="button">Dashboard do mês</button>
-        <button class="tab-btn" data-tab="comparativo" type="button">Comparativo anual</button>
-        <button class="tab-btn" data-tab="metas" type="button">Metas anuais e mensais</button>
-      </div>
-
-      <section id="lancamentos" class="tab-content active">
-        <div class="card card-destaque novo-lancamento-hover">
-          <div class="novo-lancamento-hover__topo">
-            <h2 id="tituloFormularioLancamento">Novo lançamento</h2>
-          </div>
-
-          <div class="novo-lancamento-hover__conteudo">
-
-            <div class="info">
-              O lançamento possui estes campos:
-              <strong>Data, Tipo, Descrição, Categoria, Valor e Tipo de Pagamento</strong>. Registre suas receitas, despesas e vales de forma simples.
+              <button
+                class="btn-secondary"
+                id="btnLancMesProximo"
+                type="button"
+              >
+                Mês seguinte →
+              </button>
             </div>
 
-            <form id="financeForm" class="form-grid">
-              <label for="data">
-                <span id="dataLabelText">Data</span>
-                <input type="text" id="data" name="data" inputmode="numeric" maxlength="10" autocomplete="off"
-                  required />
-              </label>
-
-              <label for="tipo">
-                <span>Tipo</span>
-                <select id="tipo" name="tipo" required>
+            <div class="filters">
+              <label for="filtroTipo">
+                <span>Filtrar por tipo</span>
+                <select id="filtroTipo">
+                  <option value="Todos">Todos</option>
                   <option value="Receita">Receita</option>
                   <option value="Despesa">Despesa</option>
                   <option value="Vales">Vales</option>
                 </select>
               </label>
+            </div>
 
-              <label for="descricao">
+            <div class="table-wrapper">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Data</th>
+                    <th>Tipo</th>
+                    <th>Descrição</th>
+                    <th>Categoria</th>
+                    <th class="col-valor">Valor</th>
+                    <th>Tipo de pagamento</th>
+                    <th>Ações</th>
+                  </tr>
+                </thead>
+                <tbody id="financeTableBody"></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <section id="gastosFixos" class="tab-content">
+          <div class="card card-destaque">
+            <h2 id="tituloFormularioGastoFixo">Novo gasto fixo</h2>
+
+            <div class="info">
+              Cadastre cada conta recorrente apenas uma vez. Ela aparecerá
+              automaticamente nos meses seguintes como pendente e só entrará nos
+              lançamentos do mês quando você clicar em
+              <strong>Marcar como pago</strong>.
+            </div>
+
+            <form id="gastosFixosForm" class="form-grid">
+              <label for="gfDescricao">
                 <span>Descrição</span>
-                <input type="text" id="descricao" name="descricao" placeholder="Digite a descrição"
-                  autocomplete="off" />
+                <input
+                  type="text"
+                  id="gfDescricao"
+                  placeholder="Ex: Fatura Cartão A, Netflix, Internet"
+                  autocomplete="off"
+                  required
+                />
               </label>
 
-              <label for="categoria">
+              <label for="gfCategoria">
                 <span>Categoria</span>
-                <input type="text" id="categoria" name="categoria" list="categoriaSugestoes"
-                  placeholder="Digite ou selecione uma categoria" autocomplete="off" required />
-                <datalist id="categoriaSugestoes"></datalist>
+                <input
+                  type="text"
+                  id="gfCategoria"
+                  placeholder="Ex: Fatura, Assinatura, Casa"
+                  autocomplete="off"
+                  required
+                />
               </label>
 
-              <label for="valor">
-                <span id="valorLabelText">Valor</span>
-                <input type="text" id="valor" name="valor" inputmode="decimal" placeholder="R$ 0,00" autocomplete="off"
-                  required />
+              <label for="gfValorPrevisto">
+                <span>Valor previsto</span>
+                <input
+                  type="text"
+                  id="gfValorPrevisto"
+                  inputmode="decimal"
+                  placeholder="R$ 0,00"
+                  autocomplete="off"
+                  required
+                />
               </label>
 
-              <label for="pagamento">
+              <label for="gfDiaVencimento">
+                <span>Dia de vencimento</span>
+                <input
+                  type="number"
+                  id="gfDiaVencimento"
+                  min="1"
+                  max="31"
+                  placeholder="10"
+                  autocomplete="off"
+                  required
+                />
+              </label>
+
+              <label for="gfPagamento">
                 <span>Tipo de pagamento</span>
-                <select id="pagamento" name="pagamento" required>
+                <select id="gfPagamento" required>
                   <option value="">Selecione</option>
-                  <option value="PIX">Pix</option>
-                  <option value="DEBITO">Debito</option>
+                  <option value="Pix">Pix</option>
+                  <option value="Debito">Debito</option>
                   <option value="DINHEIRO">Dinheiro</option>
-                  <option value="CREDITO">Credito</option>
-                  <option value="CARTÃO A">Cartão A</option>
+                  <option value="Credito">Credito</option>
+                  <option value="Cartão A">Cartão A</option>
                   <option value="Cartão P">Cartão P</option>
                 </select>
               </label>
-
             </form>
 
             <div class="actions">
-              <button class="btn-primary" id="btnSalvar" type="button">Salvar lançamento</button>
-              <button class="btn-success" id="btnAtualizar" type="button">Atualizar dados</button>
-              <button class="btn-secondary" id="btnResetarFormulario" type="button">Resetar campos</button>
-              <button class="btn-warning" id="btnAgendarLancamento" type="button">Agendar lançamento</button>
+              <button class="btn-primary" id="btnSalvarGastoFixo" type="button">
+                Salvar gasto fixo
+              </button>
+              <button
+                class="btn-secondary"
+                id="btnResetarGastoFixo"
+                type="button"
+              >
+                Resetar campos
+              </button>
+              <button
+                class="btn-success"
+                id="btnAtualizarGastosFixos"
+                type="button"
+              >
+                Atualizar gastos fixos
+              </button>
             </div>
 
-            <div class="status" id="statusBox" aria-live="polite">Aguardando dados no banco.</div>
-            <div id="painelAgendamento" class="card card-spacing agendamento-card" style="display:none;">
-              <h3>Agendar lançamento</h3>
+            <div class="status" id="gastosFixosStatus" aria-live="polite">
+              Aguardando gastos fixos.
+            </div>
+          </div>
 
-              <div class="form-grid">
-                <label>
-                  <span>Quando lançar</span>
-                  <select id="agendamentoModo">
-                    <option value="data_especifica">Data específica</option>
-                    <option value="proxima_semana">Na semana que vem</option>
-                    <option value="mes_que_vem_dia">Dia do mês que vem</option>
-                  </select>
-                </label>
+          <div class="card card-spacing">
+            <h2>Gastos fixos cadastrados</h2>
 
-                <label id="agendamentoDataWrap">
-                  <span>Data agendada</span>
-                  <input type="text" id="agendamentoData" inputmode="numeric" maxlength="10" placeholder="dd/mm/aaaa"
-                    autocomplete="off" />
-                </label>
+            <div class="lancamentos-controls">
+              <button class="btn-secondary" id="btnGFMesAnterior" type="button">
+                ← Mês anterior
+              </button>
 
-                <label id="agendamentoDiaWrap" style="display:none;">
-                  <span>Dia do mês que vem</span>
-                  <input type="number" id="agendamentoDiaMes" min="1" max="31" placeholder="13" autocomplete="off" />
-                </label>
+              <div class="lancamentos-month-info">
+                <strong>Mês exibido</strong>
+                <div id="mesAtualGastosFixos">--/----</div>
               </div>
 
-              <div class="actions">
-                <button class="btn-primary" id="btnConfirmarAgendamento" type="button">Salvar agendamento</button>
+              <button class="btn-secondary" id="btnGFMesProximo" type="button">
+                Mês seguinte →
+              </button>
+            </div>
+
+            <div class="summary contas-summary">
+              <div class="card">
+                <strong>Total previsto</strong>
+                <div class="value expense" id="gfTotalPrevisto">R$ 0,00</div>
               </div>
 
-              <div class="card card-spacing">
-                <h3>Lançamentos agendados</h3>
-                <div id="listaAgendamentos" class="agendamentos-lista"></div>
+              <div class="card">
+                <strong>Total pago</strong>
+                <div class="value income" id="gfTotalPago">R$ 0,00</div>
+              </div>
+
+              <div class="card">
+                <strong>Total pendente</strong>
+                <div class="value Vales" id="gfTotalPendente">R$ 0,00</div>
               </div>
             </div>
-          </div>
-        </div>
 
-        <div class="card card-spacing">
-          <h2>Lançamentos cadastrados</h2>
-
-          <div class="lancamentos-controls">
-            <button class="btn-secondary" id="btnLancMesAnterior" type="button">← Mês anterior</button>
-
-            <div class="lancamentos-month-info">
-              <strong>Mês exibido</strong>
-              <div id="mesAtualLancamentos">Todos</div>
+            <div class="table-wrapper">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Vencimento</th>
+                    <th>Descrição</th>
+                    <th>Categoria</th>
+                    <th class="col-valor">Valor previsto</th>
+                    <th>Pagamento</th>
+                    <th>Pago em</th>
+                    <th>Ações</th>
+                  </tr>
+                </thead>
+                <tbody id="gastosFixosTableBody"></tbody>
+              </table>
             </div>
-
-            <button class="btn-secondary" id="btnLancMesProximo" type="button">Mês seguinte →</button>
           </div>
+        </section>
 
-          <div class="filters">
-            <label for="filtroTipo">
-              <span>Filtrar por tipo</span>
-              <select id="filtroTipo">
-                <option value="Todos">Todos</option>
-                <option value="Receita">Receita</option>
-                <option value="Despesa">Despesa</option>
-                <option value="Vales">Vales</option>
-              </select>
-            </label>
-          </div>
-
-          <div class="table-wrapper">
-            <table>
-              <thead>
-                <tr>
-                  <th>Data</th>
-                  <th>Tipo</th>
-                  <th>Descrição</th>
-                  <th>Categoria</th>
-                  <th class="col-valor">Valor</th>
-                  <th>Tipo de pagamento</th>
-                  <th>Ações</th>
-                </tr>
-              </thead>
-              <tbody id="financeTableBody"></tbody>
-            </table>
-          </div>
-        </div>
-      </section>
-
-
-      <section id="gastosFixos" class="tab-content">
-        <div class="card card-destaque">
-          <h2 id="tituloFormularioGastoFixo">Novo gasto fixo</h2>
-
-          <div class="info">
-            Cadastre cada conta recorrente apenas uma vez. Ela aparecerá automaticamente nos meses seguintes como
-            pendente e só entrará nos lançamentos do mês quando você clicar em <strong>Marcar como pago</strong>.
-          </div>
-
-          <form id="gastosFixosForm" class="form-grid">
-            <label for="gfDescricao">
-              <span>Descrição</span>
-              <input type="text" id="gfDescricao" placeholder="Ex: Fatura Cartão A, Netflix, Internet"
-                autocomplete="off" required />
-            </label>
-
-            <label for="gfCategoria">
-              <span>Categoria</span>
-              <input type="text" id="gfCategoria" placeholder="Ex: Fatura, Assinatura, Casa" autocomplete="off"
-                required />
-            </label>
-
-            <label for="gfValorPrevisto">
-              <span>Valor previsto</span>
-              <input type="text" id="gfValorPrevisto" inputmode="decimal" placeholder="R$ 0,00" autocomplete="off"
-                required />
-            </label>
-
-            <label for="gfDiaVencimento">
-              <span>Dia de vencimento</span>
-              <input type="number" id="gfDiaVencimento" min="1" max="31" placeholder="10" autocomplete="off" required />
-            </label>
-
-            <label for="gfPagamento">
-              <span>Tipo de pagamento</span>
-              <select id="gfPagamento" required>
-                <option value="">Selecione</option>
-                <option value="Pix">Pix</option>
-                <option value="Debito">Debito</option>
-                <option value="DINHEIRO">Dinheiro</option>
-                <option value="Credito">Credito</option>
-                <option value="Cartão A">Cartão A</option>
-                <option value="Cartão P">Cartão P</option>
-              </select>
-            </label>
-          </form>
-
-          <div class="actions">
-            <button class="btn-primary" id="btnSalvarGastoFixo" type="button">Salvar gasto fixo</button>
-            <button class="btn-secondary" id="btnResetarGastoFixo" type="button">Resetar campos</button>
-            <button class="btn-success" id="btnAtualizarGastosFixos" type="button">Atualizar gastos fixos</button>
-          </div>
-
-          <div class="status" id="gastosFixosStatus" aria-live="polite">Aguardando gastos fixos.</div>
-        </div>
-
-        <div class="card card-spacing">
-          <h2>Gastos fixos cadastrados</h2>
-
-          <div class="lancamentos-controls">
-            <button class="btn-secondary" id="btnGFMesAnterior" type="button">← Mês anterior</button>
-
-            <div class="lancamentos-month-info">
-              <strong>Mês exibido</strong>
-              <div id="mesAtualGastosFixos">--/----</div>
+        <section id="dashboard" class="tab-content">
+          <div class="dashboard-controls card">
+            <button class="btn-secondary" id="btnMesAnterior" type="button">
+              ← Mês anterior
+            </button>
+            <div class="dashboard-month-info">
+              <strong>Mês do dashboard</strong>
+              <div id="mesAtualDashboard">--/----</div>
             </div>
-
-            <button class="btn-secondary" id="btnGFMesProximo" type="button">Mês seguinte →</button>
+            <button class="btn-secondary" id="btnMesProximo" type="button">
+              Mês seguinte →
+            </button>
           </div>
 
-          <div class="summary contas-summary">
+          <div class="summary">
             <div class="card">
-              <strong>Total previsto</strong>
-              <div class="value expense" id="gfTotalPrevisto">R$ 0,00</div>
+              <strong id="labelTotalReceitas">Total de receitas</strong>
+              <div class="value income" id="totalReceitas">R$ 0,00</div>
             </div>
 
             <div class="card">
-              <strong>Total pago</strong>
-              <div class="value income" id="gfTotalPago">R$ 0,00</div>
+              <strong id="labelTotalDespesas">Total de despesas</strong>
+              <div class="value expense" id="totalDespesas">R$ 0,00</div>
             </div>
 
             <div class="card">
-              <strong>Total pendente</strong>
-              <div class="value Vales" id="gfTotalPendente">R$ 0,00</div>
+              <strong>Vales</strong>
+              <div class="value Vales" id="resumoVales">R$ 0,00</div>
+            </div>
+
+            <div class="card">
+              <strong id="labelSaldoFinal">Saldo</strong>
+              <div class="value balance" id="saldoFinal">R$ 0,00</div>
             </div>
           </div>
 
-          <div class="table-wrapper">
-            <table>
-              <thead>
-                <tr>
-                  <th>Vencimento</th>
-                  <th>Descrição</th>
-                  <th>Categoria</th>
-                  <th class="col-valor">Valor previsto</th>
-                  <th>Pagamento</th>
-                  <th>Pago em</th>
-                  <th>Ações</th>
-                </tr>
-              </thead>
-              <tbody id="gastosFixosTableBody"></tbody>
-            </table>
-          </div>
-        </div>
-      </section>
+          <div class="grid">
+            <div class="card">
+              <h3>Receitas x Despesas do mês</h3>
+              <div class="chart-box">
+                <canvas id="chartResumoMes"></canvas>
+              </div>
+            </div>
 
-      <section id="dashboard" class="tab-content">
-        <div class="dashboard-controls card">
-          <button class="btn-secondary" id="btnMesAnterior" type="button">← Mês anterior</button>
-          <div class="dashboard-month-info">
-            <strong>Mês do dashboard</strong>
-            <div id="mesAtualDashboard">--/----</div>
-          </div>
-          <button class="btn-secondary" id="btnMesProximo" type="button">Mês seguinte →</button>
-        </div>
+            <div class="card">
+              <h3>Despesas por categoria do mês</h3>
+              <div class="chart-box">
+                <canvas id="chartCategoriasMes"></canvas>
+              </div>
+            </div>
 
-        <div class="summary">
-          <div class="card">
-            <strong id="labelTotalReceitas">Total de receitas</strong>
-            <div class="value income" id="totalReceitas">R$ 0,00</div>
-          </div>
+            <div class="card">
+              <h3>Investido no mês</h3>
+              <div class="chart-box">
+                <canvas id="chartInvestidoMes"></canvas>
+              </div>
+            </div>
 
-          <div class="card">
-            <strong id="labelTotalDespesas">Total de despesas</strong>
-            <div class="value expense" id="totalDespesas">R$ 0,00</div>
-          </div>
+            <div class="card">
+              <h3>Saldo do mês</h3>
+              <div class="chart-box">
+                <canvas id="chartSaldoMes"></canvas>
+              </div>
+            </div>
 
-          <div class="card">
-            <strong>Vales</strong>
-            <div class="value Vales" id="resumoVales">R$ 0,00</div>
-          </div>
+            <div class="card">
+              <h3>Receitas por categoria do mês</h3>
+              <div class="chart-box">
+                <canvas id="chartReceitasCategoriaMes"></canvas>
+              </div>
+            </div>
 
-          <div class="card">
-            <strong id="labelSaldoFinal">Saldo</strong>
-            <div class="value balance" id="saldoFinal">R$ 0,00</div>
+            <div class="card">
+              <h3>Distribuição por tipo do mês</h3>
+              <div class="chart-box">
+                <canvas id="chartTiposMes"></canvas>
+              </div>
+            </div>
           </div>
-        </div>
+        </section>
 
-        <div class="grid">
-          <div class="card">
-            <h3>Receitas x Despesas do mês</h3>
-            <div class="chart-box">
-              <canvas id="chartResumoMes"></canvas>
+        <section id="comparativo" class="tab-content">
+          <div class="summary">
+            <div class="card">
+              <strong>Total anual de receitas</strong>
+              <div class="value income" id="comparativoReceitasTotal">
+                R$ 0,00
+              </div>
+            </div>
+
+            <div class="card">
+              <strong>Total anual de despesas</strong>
+              <div class="value expense" id="comparativoDespesasTotal">
+                R$ 0,00
+              </div>
+            </div>
+
+            <div class="card">
+              <strong>Total anual de Vales</strong>
+              <div class="value Vales" id="comparativoValesTotal">R$ 0,00</div>
+            </div>
+
+            <div class="card">
+              <strong>Resultado anual</strong>
+              <div class="value balance" id="comparativoSaldoTotal">
+                R$ 0,00
+              </div>
             </div>
           </div>
 
-          <div class="card">
-            <h3>Despesas por categoria do mês</h3>
-            <div class="chart-box">
-              <canvas id="chartCategoriasMes"></canvas>
+          <div class="grid">
+            <div class="card">
+              <h3>Receitas x Despesas por mês</h3>
+              <div class="chart-box">
+                <canvas id="chartComparativoResumo"></canvas>
+              </div>
+            </div>
+
+            <div class="card">
+              <h3>Saldo por mês</h3>
+              <div class="chart-box">
+                <canvas id="chartComparativoSaldo"></canvas>
+              </div>
+            </div>
+
+            <div class="card">
+              <h3>Investido por mês</h3>
+              <div class="chart-box">
+                <canvas id="chartComparativoInvestido"></canvas>
+              </div>
+            </div>
+
+            <div class="card">
+              <h3>Patrimônio acumulado</h3>
+              <div class="chart-box">
+                <canvas id="chartComparativoPatrimonio"></canvas>
+              </div>
+            </div>
+
+            <div class="card">
+              <h3>Vales por mês</h3>
+              <div class="chart-box">
+                <canvas id="chartComparativoVales"></canvas>
+              </div>
             </div>
           </div>
+        </section>
 
-          <div class="card">
-            <h3>Investido no mês</h3>
-            <div class="chart-box">
-              <canvas id="chartInvestidoMes"></canvas>
+        <section id="metas" class="tab-content goals-page">
+          <header class="goals-header">
+            <div>
+              <span class="goals-eyebrow">SEU PRÓXIMO PASSO</span>
+              <h2>Planos que viram progresso.</h2>
+              <p>Defina suas metas e acompanhe cada avanço, no seu ritmo.</p>
+            </div>
+            <button class="goals-primary" id="btnEditarMetas" type="button">
+              Editar minhas metas <span aria-hidden="true">↗</span>
+            </button>
+          </header>
+          <div class="goals-toolbar">
+            <div class="goals-period">
+              <button id="goalPrev" type="button" aria-label="Período anterior">
+                ‹</button
+              ><label
+                ><span class="sr-goals">Mês de referência</span
+                ><input
+                  id="goalMonth"
+                  type="month"
+                  min="2000-01"
+                  max="2100-12" /></label
+              ><button id="goalNext" type="button" aria-label="Próximo período">
+                ›</button
+              ><button id="goalToday" type="button">Hoje</button>
+            </div>
+            <div
+              class="goals-segments"
+              role="group"
+              aria-label="Visualização das metas"
+            >
+              <button type="button" id="goalMonthly" aria-pressed="true">
+                Mensal</button
+              ><button type="button" id="goalAnnual" aria-pressed="false">
+                Anual
+              </button>
             </div>
           </div>
-
-          <div class="card">
-            <h3>Saldo do mês</h3>
-            <div class="chart-box">
-              <canvas id="chartSaldoMes"></canvas>
+          <div
+            id="goalNotice"
+            class="goals-notice"
+            role="status"
+            aria-live="polite"
+          ></div>
+          <div class="goals-overview">
+            <div>
+              <span class="goals-eyebrow" id="goalPeriodLabel">SEU MÊS</span>
+              <h3 id="goalOverviewTitle">Dê uma direção ao seu dinheiro.</h3>
+              <p id="goalOverviewText">
+                Comece definindo os valores que deseja alcançar.
+              </p>
+            </div>
+            <div class="goals-overview-count">
+              <strong id="goalOverviewCount">0/3</strong
+              ><span>objetivos no caminho</span>
             </div>
           </div>
-
-          <div class="card">
-            <h3>Receitas por categoria do mês</h3>
-            <div class="chart-box">
-              <canvas id="chartReceitasCategoriaMes"></canvas>
-            </div>
+          <div class="goals-cards" id="goalCards"></div>
+          <div class="goals-bottom">
+            <article class="goals-panel">
+              <div class="goals-panel-heading">
+                <div>
+                  <span class="goals-eyebrow">VISÃO DO ANO</span>
+                  <h3 id="goalHistoryTitle">Seu progresso mês a mês</h3>
+                </div>
+                <label class="goals-chart-filter"
+                  ><span class="sr-goals">Indicador do histórico</span
+                  ><select id="goalMetric">
+                    <option value="investido">Investimentos</option>
+                    <option value="receita">Receitas</option>
+                    <option value="despesas">Despesas</option>
+                  </select></label
+                >
+              </div>
+              <p class="goals-small">
+                Toque em um mês para ver os detalhes. A linha marca sua meta
+                mensal.
+              </p>
+              <div class="goals-chart" id="goalHistory"></div>
+              <div class="goals-chart-legend">
+                <span><i></i>Valor registrado</span><span>— Meta mensal</span>
+              </div>
+            </article>
+            <article class="goals-panel goals-plan">
+              <span class="goals-eyebrow">SEU PLANEJAMENTO</span>
+              <h3>Um plano que cabe no mês.</h3>
+              <div id="goalBudget"></div>
+              <p class="goals-small">
+                Metas mensais se repetem ao longo do ano. A visão anual equivale
+                a 12 meses.
+              </p>
+              <button class="goals-text-button" type="button" id="goalAdjust">
+                Ajustar meu plano →
+              </button>
+            </article>
           </div>
-
-          <div class="card">
-            <h3>Distribuição por tipo do mês</h3>
-            <div class="chart-box">
-              <canvas id="chartTiposMes"></canvas>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section id="comparativo" class="tab-content">
-        <div class="summary">
-          <div class="card">
-            <strong>Total anual de receitas</strong>
-            <div class="value income" id="comparativoReceitasTotal">R$ 0,00</div>
-          </div>
-
-          <div class="card">
-            <strong>Total anual de despesas</strong>
-            <div class="value expense" id="comparativoDespesasTotal">R$ 0,00</div>
-          </div>
-
-          <div class="card">
-            <strong>Total anual de Vales</strong>
-            <div class="value Vales" id="comparativoValesTotal">R$ 0,00</div>
-          </div>
-
-          <div class="card">
-            <strong>Resultado anual</strong>
-            <div class="value balance" id="comparativoSaldoTotal">R$ 0,00</div>
-          </div>
-        </div>
-
-        <div class="grid">
-          <div class="card">
-            <h3>Receitas x Despesas por mês</h3>
-            <div class="chart-box">
-              <canvas id="chartComparativoResumo"></canvas>
-            </div>
-          </div>
-
-          <div class="card">
-            <h3>Saldo por mês</h3>
-            <div class="chart-box">
-              <canvas id="chartComparativoSaldo"></canvas>
-            </div>
-          </div>
-
-          <div class="card">
-            <h3>Investido por mês</h3>
-            <div class="chart-box">
-              <canvas id="chartComparativoInvestido"></canvas>
-            </div>
-          </div>
-
-          <div class="card">
-            <h3>Patrimônio acumulado</h3>
-            <div class="chart-box">
-              <canvas id="chartComparativoPatrimonio"></canvas>
-            </div>
-          </div>
-
-          <div class="card">
-            <h3>Vales por mês</h3>
-            <div class="chart-box">
-              <canvas id="chartComparativoVales"></canvas>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section id="metas" class="tab-content goals-page">
-        <header class="goals-header">
-          <div><span class="goals-eyebrow">SEU PRÓXIMO PASSO</span><h2>Planos que viram progresso.</h2><p>Defina suas metas e acompanhe cada avanço, no seu ritmo.</p></div>
-          <button class="goals-primary" id="btnEditarMetas" type="button">Editar minhas metas <span aria-hidden="true">↗</span></button>
-        </header>
-        <div class="goals-toolbar">
-          <div class="goals-period"><button id="goalPrev" type="button" aria-label="Período anterior">‹</button><label><span class="sr-goals">Mês de referência</span><input id="goalMonth" type="month" min="2000-01" max="2100-12"></label><button id="goalNext" type="button" aria-label="Próximo período">›</button><button id="goalToday" type="button">Hoje</button></div>
-          <div class="goals-segments" role="group" aria-label="Visualização das metas"><button type="button" id="goalMonthly" aria-pressed="true">Mensal</button><button type="button" id="goalAnnual" aria-pressed="false">Anual</button></div>
-        </div>
-        <div id="goalNotice" class="goals-notice" role="status" aria-live="polite"></div>
-        <div class="goals-overview"><div><span class="goals-eyebrow" id="goalPeriodLabel">SEU MÊS</span><h3 id="goalOverviewTitle">Dê uma direção ao seu dinheiro.</h3><p id="goalOverviewText">Comece definindo os valores que deseja alcançar.</p></div><div class="goals-overview-count"><strong id="goalOverviewCount">0/3</strong><span>objetivos no caminho</span></div></div>
-        <div class="goals-cards" id="goalCards"></div>
-        <div class="goals-bottom">
-          <article class="goals-panel"><div class="goals-panel-heading"><div><span class="goals-eyebrow">VISÃO DO ANO</span><h3 id="goalHistoryTitle">Seu progresso mês a mês</h3></div><label class="goals-chart-filter"><span class="sr-goals">Indicador do histórico</span><select id="goalMetric"><option value="investido">Investimentos</option><option value="receita">Receitas</option><option value="despesas">Despesas</option></select></label></div><p class="goals-small">Toque em um mês para ver os detalhes. A linha marca sua meta mensal.</p><div class="goals-chart" id="goalHistory"></div><div class="goals-chart-legend"><span><i></i>Valor registrado</span><span>— Meta mensal</span></div></article>
-          <article class="goals-panel goals-plan"><span class="goals-eyebrow">SEU PLANEJAMENTO</span><h3>Um plano que cabe no mês.</h3><div id="goalBudget"></div><p class="goals-small">Metas mensais se repetem ao longo do ano. A visão anual equivale a 12 meses.</p><button class="goals-text-button" type="button" id="goalAdjust">Ajustar meu plano →</button></article>
-        </div>
-        <p class="goals-footnote">Valores registrados até hoje. Investimentos consideram despesas na categoria “Investimento” e ficam separados do limite de despesas. Vales e saldo inicial não entram nas receitas das metas.</p>
-        <dialog id="goalEditor" class="goals-dialog" aria-labelledby="goalEditorTitle">
-          <form id="goalForm" novalidate>
-            <div class="goals-dialog-header"><div><span class="goals-eyebrow">DO SEU JEITO</span><h3 id="goalEditorTitle">Ajuste suas metas mensais</h3></div><button type="button" id="goalClose" class="goals-close" aria-label="Fechar edição">×</button></div>
-            <p class="goals-small">Esses valores valem para todos os meses. Digite, por exemplo, 2500 ou 2.500,50. Use zero para deixar uma meta sem definir.</p>
-            <div class="goals-edit-fields">
-              <label for="inputMetaReceita"><span>Quanto quero receber</span><div class="goals-money-input"><span>R$</span><input id="inputMetaReceita" type="text" inputmode="decimal" autocomplete="off" required aria-describedby="goalFormStatus"></div></label>
-              <label for="inputMetaInvestido"><span>Quanto quero investir</span><div class="goals-money-input"><span>R$</span><input id="inputMetaInvestido" type="text" inputmode="decimal" autocomplete="off" required aria-describedby="goalFormStatus"></div></label>
-              <label for="inputMetaDespesas"><span>Meu limite de despesas</span><div class="goals-money-input"><span>R$</span><input id="inputMetaDespesas" type="text" inputmode="decimal" autocomplete="off" required aria-describedby="goalFormStatus"></div></label>
-            </div>
-            <button class="goals-text-button" id="goalUseCurrent" type="button">Usar os valores registrados no mês selecionado</button>
-            <div class="goals-edit-preview" id="goalEditPreview" aria-live="polite"></div>
-            <p id="goalFormStatus" class="goals-form-status" role="status" aria-live="polite"></p>
-            <div class="goals-dialog-actions"><button id="goalCancel" class="goals-secondary" type="button">Cancelar</button><button id="btnSalvarMetasConfig" class="goals-primary" type="submit">Salvar metas</button></div>
-          </form>
-        </dialog>
-      </section>
+          <p class="goals-footnote">
+            Valores registrados até hoje. Investimentos consideram despesas na
+            categoria “Investimento” e ficam separados do limite de despesas.
+            Vales e saldo inicial não entram nas receitas das metas.
+          </p>
+          <dialog
+            id="goalEditor"
+            class="goals-dialog"
+            aria-labelledby="goalEditorTitle"
+          >
+            <form id="goalForm" novalidate>
+              <div class="goals-dialog-header">
+                <div>
+                  <span class="goals-eyebrow">DO SEU JEITO</span>
+                  <h3 id="goalEditorTitle">Ajuste suas metas mensais</h3>
+                </div>
+                <button
+                  type="button"
+                  id="goalClose"
+                  class="goals-close"
+                  aria-label="Fechar edição"
+                >
+                  ×
+                </button>
+              </div>
+              <p class="goals-small">
+                Esses valores valem para todos os meses. Digite somente os
+                números: a vírgula e os centavos aparecem automaticamente. Ex.:
+                250000 vira 2.500,00. Use zero para deixar uma meta sem definir.
+              </p>
+              <div class="goals-edit-fields">
+                <label for="inputMetaReceita"
+                  ><span>Quanto quero receber</span>
+                  <div class="goals-money-input">
+                    <span>R$</span
+                    ><input
+                      id="inputMetaReceita"
+                      type="text"
+                      inputmode="decimal"
+                      autocomplete="off"
+                      required
+                      aria-describedby="goalFormStatus"
+                    /></div
+                ></label>
+                <label for="inputMetaInvestido"
+                  ><span>Quanto quero investir</span>
+                  <div class="goals-money-input">
+                    <span>R$</span
+                    ><input
+                      id="inputMetaInvestido"
+                      type="text"
+                      inputmode="decimal"
+                      autocomplete="off"
+                      required
+                      aria-describedby="goalFormStatus"
+                    /></div
+                ></label>
+                <label for="inputMetaDespesas"
+                  ><span>Meu limite de despesas</span>
+                  <div class="goals-money-input">
+                    <span>R$</span
+                    ><input
+                      id="inputMetaDespesas"
+                      type="text"
+                      inputmode="decimal"
+                      autocomplete="off"
+                      required
+                      aria-describedby="goalFormStatus"
+                    /></div
+                ></label>
+              </div>
+              <button
+                class="goals-text-button"
+                id="goalUseCurrent"
+                type="button"
+              >
+                Usar os valores registrados no mês selecionado
+              </button>
+              <div
+                class="goals-edit-preview"
+                id="goalEditPreview"
+                aria-live="polite"
+              ></div>
+              <p
+                id="goalFormStatus"
+                class="goals-form-status"
+                role="status"
+                aria-live="polite"
+              ></p>
+              <div class="goals-dialog-actions">
+                <button id="goalCancel" class="goals-secondary" type="button">
+                  Cancelar</button
+                ><button
+                  id="btnSalvarMetasConfig"
+                  class="goals-primary"
+                  type="submit"
+                >
+                  Salvar metas
+                </button>
+              </div>
+            </form>
+          </dialog>
+        </section>
+      </div>
     </div>
-  </div>
 
-        <script src="js/utils.js?v=metas2"></script>
-        <script src="js/api.js?v=metas2"></script>
-        <script src="js/form.js?v=metas2"></script>
-        <script src="js/ui.js?v=metas2"></script>
-        <script src="js/charts.js?v=metas2"></script>
-        <script src="js/metas.js?v=metas2"></script>
-        <script src="js/gastos-fixos.js?v=metas2"></script>
-        <script src="js/preferencias-banco.js?v=metas2"></script>
-        <script src="js/main.js?v=metas2"></script>
-        <script src="js/auth.js?v=metas2"></script>
-        <script src="js/perfil.js?v=metas2"></script>
-        <script src="js/conta-ui.js?v=metas2"></script>
+    <script src="js/utils.js?v=metas2"></script>
+    <script src="js/api.js?v=metas2"></script>
+    <script src="js/form.js?v=metas2"></script>
+    <script src="js/ui.js?v=metas2"></script>
+    <script src="js/charts.js?v=metas2"></script>
+    <script src="js/metas.js?v=metas3"></script>
+    <script src="js/gastos-fixos.js?v=metas2"></script>
+    <script src="js/preferencias-banco.js?v=metas2"></script>
+    <script src="js/main.js?v=metas2"></script>
+    <script src="js/auth.js?v=metas2"></script>
+    <script src="js/perfil.js?v=metas2"></script>
+    <script src="js/conta-ui.js?v=metas2"></script>
 
-<script src="js/melhorias-senha.js?v=metas2"></script>
-<script src="js/dashboards-personalizados.js?v=metas2"></script>
-</body>
-
-
+    <script src="js/melhorias-senha.js?v=metas2"></script>
+    <script src="js/dashboards-personalizados.js?v=metas2"></script>
+  </body>
 </html>

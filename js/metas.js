@@ -5,6 +5,49 @@ const goalMoney = value => Number(value || 0).toLocaleString('pt-BR', { style: '
 const goalInputMoney = value => Number(value || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const goalEl = id => document.getElementById(id);
 const goalTodayMonth = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`; };
+// Máscara de reais: os dois últimos dígitos representam os centavos.
+function maskGoalInput(input) {
+  const raw = input.value;
+  const position = input.selectionStart ?? raw.length;
+  const digitsOnRight = raw.slice(position).replace(/\D/g, '').length;
+  const digits = raw.replace(/\D/g, '').slice(0, 15);
+  input.value = digits ? goalInputMoney(Number(digits) / 100) : '';
+  let caret = input.value.length;
+  let remaining = digitsOnRight;
+  while (caret > 0 && remaining > 0) {
+    caret--;
+    if (/\d/.test(input.value[caret])) remaining--;
+  }
+  input.setSelectionRange(caret, caret);
+}
+function setupGoalMoneyInput(input) {
+  input.addEventListener('input', () => {
+    maskGoalInput(input);
+    input.removeAttribute('aria-invalid');
+    previewGoalDraft();
+  });
+  // Ao apagar junto de um separador, apaga o dígito vizinho em vez de travar.
+  input.addEventListener('beforeinput', event => {
+    const start = input.selectionStart, end = input.selectionEnd;
+    if (start !== end || start === null) return;
+    const backward = event.inputType === 'deleteContentBackward';
+    const forward = event.inputType === 'deleteContentForward';
+    if (!backward && !forward) return;
+    let i = backward ? start - 1 : start;
+    if (i < 0 || i >= input.value.length || /\d/.test(input.value[i])) return;
+    while (i >= 0 && i < input.value.length && !/\d/.test(input.value[i])) i += backward ? -1 : 1;
+    if (i < 0 || i >= input.value.length) return;
+    event.preventDefault();
+    input.value = input.value.slice(0, i) + input.value.slice(i + 1);
+    input.setSelectionRange(backward ? i : start, backward ? i : start);
+    maskGoalInput(input);
+    previewGoalDraft();
+  });
+  input.addEventListener('blur', () => {
+    if (!input.value) input.value = '0,00';
+    previewGoalDraft();
+  });
+}
 function parseGoalMoney(raw) {
   if (typeof raw === 'number') return Number.isFinite(raw) && raw >= 0 ? raw : NaN;
   const s = String(raw ?? '').trim().replace(/^R\$\s*/, '').replace(/\s/g, '');
@@ -118,7 +161,7 @@ function previewGoalDraft() {
 function openGoalEditor(field='receita') {
   if(!preferenciasProntas)return;
   const targets=goalTargets();GOAL_FIELDS.forEach(k=>{const input=goalEl(goalFieldId(k));input.value=goalInputMoney(targets[k]);input.removeAttribute('aria-invalid');});
-  goalEl('goalFormStatus').textContent='';previewGoalDraft();goalEl('goalEditor').showModal();goalEl(goalFieldId(field)).focus();
+  goalEl('goalFormStatus').textContent='';previewGoalDraft();goalEl('goalEditor').showModal();goalEl(goalFieldId(field)).focus();goalEl(goalFieldId(field)).select();
 }
 async function saveGoalDraft(event) {
   event.preventDefault();if(goalSaving)return;
@@ -149,7 +192,7 @@ function inicializarPainelMetas(data=[]) {
     goalEl('goalMonth').onchange=()=>{if(/^\d{4}-(0[1-9]|1[0-2])$/.test(goalEl('goalMonth').value)){goalMonth=goalEl('goalMonth').value;renderGoals();}};
     goalEl('goalMonthly').onclick=()=>{goalMode='mensal';renderGoals();};goalEl('goalAnnual').onclick=()=>{goalMode='anual';renderGoals();};
     goalEl('goalMetric').onchange=()=>renderGoalHistory(goalTargets());
-    GOAL_FIELDS.forEach(k=>goalEl(goalFieldId(k)).addEventListener('input',previewGoalDraft));
+    GOAL_FIELDS.forEach(k=>setupGoalMoneyInput(goalEl(goalFieldId(k))));
     goalEl('goalUseCurrent').onclick=()=>{const v=goalSummarize(goalData,goalMonth);GOAL_FIELDS.forEach(k=>goalEl(goalFieldId(k)).value=goalInputMoney(v[k]));previewGoalDraft();};goalEventsReady=true;
   }
   renderGoals();

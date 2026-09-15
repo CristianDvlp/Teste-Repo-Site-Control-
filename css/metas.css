@@ -30,3 +30,36 @@
 @media(max-width:1050px){.goals-goal{padding:18px}.goals-cards{gap:12px}.goals-card-heading{gap:8px}.goals-card-heading p{font-size:10px}.goals-icon{width:33px;height:33px}.goals-bottom{grid-template-columns:minmax(0,1.4fr) minmax(260px,1fr)}}
 @media(max-width:780px){.goals-header{align-items:flex-start;flex-direction:column;gap:18px}.goals-header h2{font-size:29px}.goals-cards{grid-template-columns:1fr}.goals-bottom{grid-template-columns:1fr}.goals-actual{font-size:32px;margin-top:20px}.goals-overview{padding:22px}.goals-overview h3{font-size:20px}.goals-overview-count strong{font-size:34px}.goals-overview-count span{max-width:88px;line-height:1.5}.goals-progress-label{margin-top:20px}.goals-toolbar{align-items:stretch;flex-direction:column}.goals-segments{align-self:flex-start}.goals-header>.goals-primary{width:100%}.goals-panel{padding:19px}.goals-chart{gap:5px}.goals-dialog{padding:22px}.goals-dialog h3{font-size:21px}}
 @media(prefers-reduced-motion:reduce){.goals-page *,.goals-dialog *{transition:none!important}}
+
+/* Isola os componentes dos estilos globais de header e form do site. */
+#metas .goals-header {
+  position: static;
+  top: auto;
+  z-index: auto;
+  display: flex;
+  width: auto;
+  min-height: 0;
+  margin: 0 0 22px;
+  padding: 30px 32px;
+  border: 1px solid var(--goal-line);
+  border-radius: 16px;
+  background: #fff;
+  color: var(--goal-ink);
+  box-shadow: none;
+}
+#metas .goals-header p { color: var(--goal-muted); }
+.goals-dialog #goalForm {
+  display: block;
+  grid-template-columns: none;
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  min-width: 0;
+}
+.goals-dialog { padding: 30px; }
+.goals-dialog .goals-money-input > span { flex-shrink: 0; }
+.goals-dialog .goals-money-input input { font-variant-numeric: tabular-nums; }
+@media (max-width: 780px) {
+  #metas .goals-header { padding: 24px 22px; }
+  .goals-dialog { padding: 24px 22px; }
+}
