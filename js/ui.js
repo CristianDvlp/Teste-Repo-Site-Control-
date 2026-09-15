@@ -115,7 +115,7 @@ function renderTabela(lancamentos) {
   if (dados.length === 0) {
     financeTableBody.innerHTML = `
       <tr>
-        <td colspan="9" style="text-align:center; color:#6b7280;">
+        <td colspan="7" style="text-align:center; color:#6b7280;">
           Nenhum lançamento encontrado.
         </td>
       </tr>
@@ -133,13 +133,6 @@ function renderTabela(lancamentos) {
       const descricao = formatarTextoPadrao(item.descricao);
       const categoria = formatarTextoPadrao(item.categoria);
       const pagamento = formatarTextoPadrao(item.pagamento);
-      const parcela = item.parcelado && item.parcelaAtual && item.totalParcelas
-        ? `${item.parcelaAtual}/${item.totalParcelas}`
-        : '—';
-      const statusParcela = item.parcelado
-        ? (item.parcelaPaga ? '<span class="status-parcela pago">Pago</span>' : '<span class="status-parcela pendente">Pendente</span>')
-        : '—';
-      const ehParcelamentoGerenciado = !!(item.parcelado && item.grupoParcelamento);
       const estaEditando = typeof lancamentoEmEdicaoId !== 'undefined' &&
         String(lancamentoEmEdicaoId) === String(identificador);
 
@@ -160,14 +153,10 @@ function renderTabela(lancamentos) {
         <td>${categoria}</td>
         <td>${formatarMoeda(obterValorAbsoluto(item))}</td>
         <td>${pagamento}</td>
-        <td><span class="parcela-badge${item.parcelado ? ' ativa' : ''}">${parcela}</span></td>
-        <td>${statusParcela}</td>
         <td>
           <div class="acoes-linha">
-            ${ehParcelamentoGerenciado
-              ? `<button class="btn-primary btn-gerenciar-parcelamento" data-grupo="${item.grupoParcelamento}" type="button">Gerenciar</button>`
-              : `<button class="btn-warning btn-editar" data-id="${identificador}" type="button">Editar</button>
-                 <button class="btn-danger btn-excluir" data-id="${identificador}" type="button">Excluir</button>`}
+            <button class="btn-warning btn-editar" data-id="${identificador}" type="button">Editar</button>
+            <button class="btn-danger btn-excluir" data-id="${identificador}" type="button">Excluir</button>
           </div>
         </td>
       `;
@@ -264,18 +253,13 @@ async function atualizarComparativoComContas(lancamentos) {
 }
 
 function atualizarControleMesDashboard(lancamentos, mesSelecionado = '') {
-  const mesesDisponiveis = obterMesesDisponiveis(lancamentos);
-  const indiceAtual = mesesDisponiveis.indexOf(mesSelecionado);
-
   const label = document.getElementById('mesAtualDashboard');
   const btnAnterior = document.getElementById('btnMesAnterior');
   const btnProximo = document.getElementById('btnMesProximo');
-
   if (!label || !btnAnterior || !btnProximo) return;
-
-  label.textContent = mesSelecionado || 'Sem mês';
-  btnAnterior.disabled = indiceAtual <= 0;
-  btnProximo.disabled = indiceAtual === -1 || indiceAtual >= mesesDisponiveis.length - 1;
+  label.textContent = mesSelecionado;
+  btnAnterior.disabled = false;
+  btnProximo.disabled = false;
 }
 
 function atualizarControleMesLancamentos(lancamentos, mesSelecionado = '') {

@@ -34,21 +34,8 @@ function montarPayloadLancamento(dados) {
     descricao: String(dados.descricao || "").trim(),
     categoria: String(dados.categoria || "").trim(),
     valor: dados.valor,
-    pagamento: normalizarPagamentoParaAPI(dados.pagamento || dados.FormaPagamento),
-    parcelado: !!dados.parcelado
+    pagamento: normalizarPagamentoParaAPI(dados.pagamento || dados.FormaPagamento)
   };
-
-  if (dados.parcelado && Array.isArray(dados.parcelas)) {
-    payload.valorTotalCompra = dados.valorTotalCompra ?? dados.valor;
-    payload.totalParcelas = Number(dados.totalParcelas);
-    payload.modoParcelas = dados.modoParcelas || "iguais";
-    payload.parcelas = dados.parcelas.map((parcela, indice) => ({
-      parcelaAtual: indice + 1,
-      data: String(parcela.data || "").trim(),
-      valor: Number(parcela.valor),
-      paga: !!parcela.paga
-    }));
-  }
 
   return payload;
 }
@@ -119,30 +106,6 @@ async function excluirLancamentoBanco(id) {
   return dados;
 }
 
-async function atualizarStatusParcelaAPI(id, parcelaPaga) {
-  const resposta = await fetch("/api/lancamentos", {
-    method: "PATCH",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ id, parcelaPaga: !!parcelaPaga })
-  });
-
-  const dados = await resposta.json().catch(() => ({}));
-  if (!resposta.ok) throw new Error(dados.erro || "Erro ao atualizar status da parcela");
-  return dados;
-}
-
-async function excluirParcelamentoAPI(grupoParcelamento) {
-  const resposta = await fetch("/api/lancamentos", {
-    method: "DELETE",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ grupoParcelamento })
-  });
-
-  const dados = await resposta.json().catch(() => ({}));
-  if (!resposta.ok) throw new Error(dados.erro || "Erro ao excluir parcelamento");
-  return dados;
-}
-
 /*
   Estas funções mantêm os mesmos nomes antigos.
   Assim o restante do site continua chamando carregarDadosAPI(),
@@ -174,7 +137,7 @@ async function salvarLancamentoAPI(novo) {
   return {
     success: true,
     dados: salvo,
-    message: novo.parcelado ? "Parcelamento criado com sucesso" : "Lançamento salvo com sucesso"
+    message: "Lançamento salvo com sucesso"
   };
 }
 
@@ -362,7 +325,7 @@ async function salvarAgendamentoAPI(agendamento) {
       "Content-Type": "application/json"
     },
     body: JSON.stringify(
-      montarPayloadLancamento(agendamento)
+      { ...montarPayloadLancamento(agendamento), chaveOrigem: agendamento.chaveOrigem, acao: agendamento.acao }
     )
   });
 

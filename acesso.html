@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+ <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+ <meta name="referrer" content="no-referrer">
+ <title>Confirmar acesso — Controle Financeiro</title>
+ <link rel="stylesheet" href="css/conta.css?v=consolidado3">
+</head>
+<body class="conta-pagina">
+ <main class="conta-acesso">
+  <h1 id="acessoTitulo">Confirmar acesso</h1>
+  <p id="acessoAjuda" class="conta-ajuda"></p>
+  <form id="acessoForm" class="conta-form">
+   <div id="acessoSenhas">
+    <label>Defina sua senha<input id="acessoSenha" type="password" autocomplete="new-password" minlength="8" required></label>
+    <label>Confirme sua senha<input id="acessoConfirmar" type="password" autocomplete="new-password" minlength="8" required></label>
+   </div>
+   <button id="acessoEnviar" type="submit">Confirmar</button>
+  </form>
+  <p id="acessoStatus" class="conta-status" role="status"></p>
+  <a href="login.html">Voltar para o login</a>
+ </main>
+ <script src="js/acesso.js?v=consolidado3"></script>
+</body>
+</html>

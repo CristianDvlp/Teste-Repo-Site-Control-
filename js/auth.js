@@ -8,60 +8,6 @@ function mostrarMensagemLogin(texto) {
   }
 }
 
-async function cadastrarConta() {
-  const usuario = document.getElementById("usuario").value.trim();
-  const senha = document.getElementById("senha").value.trim();
-
-  if (!usuario || !senha) {
-    mostrarMensagemLogin("Digite usuário e senha para cadastrar.");
-    return;
-  }
-
-  const resposta = await fetch("/api/register", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify({ usuario, senha })
-  });
-
-  const dados = await resposta.json();
-
-  if (!resposta.ok) {
-    mostrarMensagemLogin(dados.erro || "Erro ao cadastrar.");
-    return;
-  }
-
-  mostrarMensagemLogin("Solicitação enviada. Aguarde até sua conta ser aceita.");
-}
-
-async function entrarConta() {
-  const usuario = document.getElementById("usuario").value.trim();
-  const senha = document.getElementById("senha").value.trim();
-
-  if (!usuario || !senha) {
-    mostrarMensagemLogin("Digite usuário e senha.");
-    return;
-  }
-
-  const resposta = await fetch("/api/login", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify({ usuario, senha })
-  });
-
-  const dados = await resposta.json();
-
-  if (!resposta.ok) {
-    mostrarMensagemLogin(dados.erro || "Usuário ou senha inválidos.");
-    return;
-  }
-
-  window.location.href = "index.html";
-}
-
 async function verificarLogin() {
   try {
     const resposta = await fetch("/api/me");
@@ -75,6 +21,7 @@ async function verificarLogin() {
     window.usuarioAtualChave = encodeURIComponent(
       String(dados.id ?? dados.usuario)
     );
+    window.contaAtual = dados;
 
     const nomeUsuarioHeader = document.getElementById("nomeUsuarioHeader");
 
@@ -104,76 +51,7 @@ async function sairConta() {
   window.location.href = "login.html";
 }
 
-function togglePainelSolicitacoes() {
-  const painel = document.getElementById("painelSolicitacoes");
-
-  if (!painel) return;
-
-  painel.style.display = painel.style.display === "block" ? "none" : "block";
-}
-
-async function carregarSolicitacoesPendentes() {
-  const resposta = await fetch("/api/solicitacoes");
-
-  if (!resposta.ok) {
-    return;
-  }
-
-  const solicitacoes = await resposta.json();
-
-  const qtdSolicitacoes = document.getElementById("qtdSolicitacoes");
-  const listaSolicitacoes = document.getElementById("listaSolicitacoes");
-
-  if (qtdSolicitacoes) {
-    qtdSolicitacoes.textContent = solicitacoes.length;
-    qtdSolicitacoes.style.display = solicitacoes.length > 0 ? "inline-flex" : "none";
-  }
-
-  if (!listaSolicitacoes) return;
-
-  if (solicitacoes.length === 0) {
-    listaSolicitacoes.innerHTML = `<p class="sem-solicitacoes">Nenhuma solicitação pendente.</p>`;
-    return;
-  }
-
-  listaSolicitacoes.innerHTML = solicitacoes.map(solicitacao => `
-    <div class="solicitacao-item">
-      <div>
-        <strong>${solicitacao.usuario}</strong>
-        <span>Solicitado em ${solicitacao.solicitado_em}</span>
-      </div>
-
-      <div class="solicitacao-actions">
-        <button type="button" class="btn-aprovar" onclick="responderSolicitacao(${solicitacao.id}, 'aprovar')">
-          Aceitar
-        </button>
-
-        <button type="button" class="btn-recusar" onclick="responderSolicitacao(${solicitacao.id}, 'recusar')">
-          Recusar
-        </button>
-      </div>
-    </div>
-  `).join("");
-}
-
-async function responderSolicitacao(id, acao) {
-  const resposta = await fetch("/api/solicitacoes", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify({ id, acao })
-  });
-
-  const dados = await resposta.json();
-
-  if (!resposta.ok) {
-    alert(dados.erro || "Erro ao responder solicitação.");
-    return;
-  }
-
-  carregarSolicitacoesPendentes();
-}
+// Sininho e cadastro por e-mail são gerenciados em conta-ui.js.
 
 function toggleMenuUsuario() {
   const menu = document.getElementById("menuUsuario");
@@ -226,18 +104,19 @@ function limparCamposSenha() {
 }
 
 async function alterarSenha() {
-  const senhaAtual = document.getElementById("senhaAtualReset").value.trim();
-  const novaSenha = document.getElementById("novaSenhaReset").value.trim();
-  const confirmarSenha = document.getElementById("confirmarSenhaReset").value.trim();
+  const senhaAtual = document.getElementById("senhaAtualReset").value;
+  const novaSenha = document.getElementById("novaSenhaReset").value;
+  const confirmarSenha = document.getElementById("confirmarSenhaReset").value;
   const status = document.getElementById("statusResetSenha");
 
+  status.classList.add('mensagem-erro');
   if (!senhaAtual || !novaSenha || !confirmarSenha) {
     status.textContent = "Preencha todos os campos.";
     return;
   }
 
-  if (novaSenha.length < 6) {
-    status.textContent = "A nova senha precisa ter pelo menos 6 caracteres.";
+  if (novaSenha.length < 8) {
+    status.textContent = "A nova senha precisa ter pelo menos 8 caracteres.";
     return;
   }
 
@@ -246,6 +125,7 @@ async function alterarSenha() {
     return
   }
 
+  try {
   const resposta = await fetch("/api/alterar-senha", {
     method: "POST",
     headers: {
@@ -265,9 +145,13 @@ async function alterarSenha() {
     return;
   }
 
+  status.classList.remove("mensagem-erro");
   status.textContent = "Senha alterada com sucesso!";
 
   setTimeout(() => {
     fecharModalSenha();
   }, 1200);
+  } catch {
+    status.textContent = "Não foi possível alterar a senha. Tente novamente.";
+  }
 }

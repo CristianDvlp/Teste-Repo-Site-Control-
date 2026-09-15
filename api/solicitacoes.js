@@ -1,128 +1,23 @@
-import { neon } from "@neondatabase/serverless";
-import jwt from "jsonwebtoken";
-
-const sql = neon(process.env.DATABASE_URL);
-
-function pegarCookie(req, nome) {
-  const cookies = req.headers.cookie || "";
-  const partes = cookies.split(";").map(cookie => cookie.trim());
-
-  for (const parte of partes) {
-    const [chave, valor] = parte.split("=");
-
-    if (chave === nome) {
-      return valor;
-    }
+// Endpoint mantido para o sininho: agora apenas avisos, nunca aprovação de contas.
+import {sql,sessao,protegerPost,responderErro,falha} from '../lib/conta.js';
+export default async function handler(req,res) {
+ res.setHeader('Cache-Control','no-store');
+ try {
+  const admin=await sessao(req);
+  if(!admin.admin) throw falha(403,'Sem permissão.');
+  if(req.method === 'GET') {
+   const avisos=await sql`SELECT n.id,coalesce(u.nome,u.usuario) AS usuario,u.email,n.criado_em,
+    (l.notificacao_id IS NOT NULL) AS lida FROM conta_notificacoes n JOIN usuarios u ON u.id=n.usuario_id
+    LEFT JOIN conta_notificacoes_lidas l ON l.notificacao_id=n.id AND l.admin_id=${admin.id}
+    ORDER BY (l.notificacao_id IS NOT NULL),n.criado_em DESC LIMIT 100`;
+   const [contagem]=await sql`SELECT count(*)::int AS total FROM conta_notificacoes n
+    WHERE NOT EXISTS(SELECT 1 FROM conta_notificacoes_lidas l WHERE l.notificacao_id=n.id AND l.admin_id=${admin.id})`;
+   return res.status(200).json({avisos,naoLidas:contagem.total});
   }
-
-  return null;
-}
-
-async function obterAdmin(req) {
-  const token = pegarCookie(req, "session");
-
-  if (!token) {
-    throw new Error("NAO_LOGADO");
-  }
-
-  const dados = jwt.verify(token, process.env.JWT_SECRET);
-
-  const resultado = await sql`
-    SELECT id, usuario, admin, status
-    FROM usuarios
-    WHERE id = ${dados.id}
-  `;
-
-  if (resultado.length === 0) {
-    throw new Error("NAO_LOGADO");
-  }
-
-  const usuario = resultado[0];
-
-  if (!usuario.admin || usuario.status !== "aprovado") {
-    throw new Error("SEM_PERMISSAO");
-  }
-
-  return usuario;
-}
-
-export default async function handler(req, res) {
-  try {
-    const admin = await obterAdmin(req);
-
-    if (req.method === "GET") {
-      const pendentes = await sql`
-        SELECT id, usuario, TO_CHAR(solicitado_em, 'DD/MM/YYYY HH24:MI') AS solicitado_em
-        FROM usuarios
-        WHERE status = 'pendente'
-        ORDER BY solicitado_em ASC
-      `;
-
-      return res.status(200).json(pendentes);
-    }
-
-    if (req.method === "POST") {
-      const { id, acao } = req.body;
-
-      if (!id || !acao) {
-        return res.status(400).json({ erro: "Informe o usuário e a ação" });
-      }
-
-      if (acao === "aprovar") {
-        const aprovado = await sql`
-          UPDATE usuarios
-          SET status = 'aprovado',
-              aprovado_em = NOW(),
-              aprovado_por = ${admin.id}
-          WHERE id = ${id}
-            AND status = 'pendente'
-          RETURNING id, usuario
-        `;
-
-        if (aprovado.length === 0) {
-          return res.status(404).json({ erro: "Solicitação não encontrada" });
-        }
-
-        return res.status(200).json({
-          mensagem: "Usuário aprovado com sucesso",
-          usuario: aprovado[0].usuario
-        });
-      }
-
-      if (acao === "recusar") {
-        const recusado = await sql`
-          UPDATE usuarios
-          SET status = 'recusado'
-          WHERE id = ${id}
-            AND status = 'pendente'
-          RETURNING id, usuario
-        `;
-
-        if (recusado.length === 0) {
-          return res.status(404).json({ erro: "Solicitação não encontrada" });
-        }
-
-        return res.status(200).json({
-          mensagem: "Usuário recusado",
-          usuario: recusado[0].usuario
-        });
-      }
-
-      return res.status(400).json({ erro: "Ação inválida" });
-    }
-
-    return res.status(405).json({ erro: "Método não permitido" });
-  } catch (erro) {
-    console.error(erro);
-
-    if (erro.message === "NAO_LOGADO") {
-      return res.status(401).json({ erro: "Você precisa estar logado" });
-    }
-
-    if (erro.message === "SEM_PERMISSAO") {
-      return res.status(403).json({ erro: "Você não tem permissão" });
-    }
-
-    return res.status(500).json({ erro: "Erro ao processar solicitações" });
-  }
+  protegerPost(req);
+  if(req.body?.acao !== 'ler' || !/^\d+$/.test(String(req.body?.id))) throw falha(400,'Ação inválida.');
+  await sql`INSERT INTO conta_notificacoes_lidas(notificacao_id,admin_id)
+   SELECT id,${admin.id} FROM conta_notificacoes WHERE id=${req.body.id} ON CONFLICT DO NOTHING`;
+  return res.status(200).json({mensagem:'Notificação marcada como lida.'});
+ } catch(erro) { return responderErro(res,erro); }
 }

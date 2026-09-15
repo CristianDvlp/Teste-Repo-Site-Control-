@@ -5,3 +5,5 @@ node_modules
 .env.local
 backup-lancamentos.csv
 estrutura-financeiro.sql
+.txt
+LEIA

@@ -1,5 +1,5 @@
 import { neon } from "@neondatabase/serverless";
-import jwt from "jsonwebtoken";
+import { validarTokenSessao } from "../lib/conta.js";
 
 const sql = neon(process.env.DATABASE_URL);
 
@@ -18,14 +18,14 @@ function pegarCookie(req, nome) {
   return null;
 }
 
-function obterUsuarioLogado(req) {
+async function obterUsuarioLogado(req) {
   const token = pegarCookie(req, "session");
 
   if (!token) {
     throw new Error("NAO_LOGADO");
   }
 
-  const dados = jwt.verify(token, process.env.JWT_SECRET);
+    const dados = await validarTokenSessao(token);
 
   return {
     id: dados.id,
@@ -174,7 +174,7 @@ export default async function handler(req, res) {
   }
 
   try {
-    const usuarioLogado = obterUsuarioLogado(req);
+    const usuarioLogado = await obterUsuarioLogado(req);
     const usuarioId = usuarioLogado.id;
 
     const {

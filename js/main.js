@@ -7,23 +7,15 @@ let lancamentos = [];
 let mesDashboardSelecionado = '';
 let mesLancamentosSelecionado = '';
 let lancamentoEmEdicaoId = null;
-const AGENDAMENTOS_STORAGE_KEY = 'lancamentos_agendados_v1';
 let tabAtiva = 'lancamentos';
 let revisaoDados = 0;
 let chaveDashboardRenderizada = '';
 let revisaoComparativoRenderizada = -1;
 
 function ajustarMesDashboardSelecionado() {
-  const lancamentosAnaliticos = obterLancamentosAnaliticos();
-  const mesesDisponiveis = obterMesesDisponiveis(lancamentosAnaliticos);
-
-  if (mesesDisponiveis.length === 0) {
-    mesDashboardSelecionado = '';
-    return;
-  }
-
-  if (!mesDashboardSelecionado || !mesesDisponiveis.includes(mesDashboardSelecionado)) {
-    mesDashboardSelecionado = mesesDisponiveis[mesesDisponiveis.length - 1];
+  if (!/^\d{2}\/\d{4}$/.test(mesDashboardSelecionado)) {
+    const hoje = new Date();
+    mesDashboardSelecionado = `${String(hoje.getMonth() + 1).padStart(2, '0')}/${hoje.getFullYear()}`;
   }
 }
 
@@ -114,23 +106,12 @@ function gerarIdAgendamento() {
   return `ag_${Date.now()}_${Math.random().toString(16).slice(2)}`;
 }
 
-function obterAgendamentosSalvos() {
-  try {
-    const dados = JSON.parse(localStorage.getItem(AGENDAMENTOS_STORAGE_KEY) || '[]');
-    return Array.isArray(dados) ? dados : [];
-  } catch (error) {
-    console.error('Erro ao ler agendamentos:', error);
-    return [];
-  }
-}
-
-function salvarAgendamentosSalvos(lista) {
-  try {
-    localStorage.setItem(AGENDAMENTOS_STORAGE_KEY, JSON.stringify(lista));
-  } catch (error) {
-    console.error('Erro ao salvar agendamentos:', error);
-    setStatus('Não foi possível salvar o agendamento no navegador.', true);
-  }
+let agendamentosBanco = [];
+let salvandoAgendamento = false;
+let tentativaAgendamento = null;
+async function atualizarAgendamentosBanco() {
+  agendamentosBanco = await buscarAgendamentosAPI();
+  renderListaAgendamentos();
 }
 
 function formatarDataBRLocal(data) {
@@ -251,7 +232,8 @@ function obterDadosBaseParaAgendamento() {
   };
 }
 
-function salvarAgendamentoLancamento() {
+async function salvarAgendamentoLancamento() {
+  if (salvandoAgendamento) return;
   const dataAgendada = calcularDataAgendada();
 
   if (!dataAgendada) {
@@ -260,11 +242,6 @@ function salvarAgendamentoLancamento() {
   }
 
   const dadosBase = obterDadosBaseParaAgendamento();
-
-  if (dadosBase.parcelado) {
-    setStatus('Compras parceladas não precisam ser agendadas: o sistema já cria todas as parcelas futuras.', true);
-    return;
-  }
 
   const novoAgendamento = {
     ...dadosBase,
@@ -282,25 +259,35 @@ function salvarAgendamentoLancamento() {
     return;
   }
 
-  const lista = obterAgendamentosSalvos();
-  lista.push(novoAgendamento);
-  salvarAgendamentosSalvos(lista);
-  renderListaAgendamentos();
-  setStatus(`Lançamento agendado para ${dataAgendada}.`);
+  const assinatura = JSON.stringify([novoAgendamento.data, novoAgendamento.tipo, novoAgendamento.descricao, novoAgendamento.categoria, novoAgendamento.valor, novoAgendamento.pagamento]);
+  if (!tentativaAgendamento || tentativaAgendamento.assinatura !== assinatura) tentativaAgendamento = { assinatura, chave: novoAgendamento.id };
+  salvandoAgendamento = true;
+  try {
+    await salvarAgendamentoAPI({ ...novoAgendamento, chaveOrigem: tentativaAgendamento.chave });
+    tentativaAgendamento = null;
+    setStatus(`Lançamento agendado no banco para ${dataAgendada}.`);
+    try { await atualizarAgendamentosBanco(); }
+    catch { setStatus('Agendamento salvo no banco. Recarregue a página para atualizar a lista.', true); }
+  } catch (e) { setStatus('Não foi possível concluir o agendamento: ' + e.message, true); }
+  finally { salvandoAgendamento = false; }
 }
 
-function excluirAgendamento(id) {
-  const lista = obterAgendamentosSalvos().filter(item => String(item.id) !== String(id));
-  salvarAgendamentosSalvos(lista);
-  renderListaAgendamentos();
-  setStatus('Agendamento removido com sucesso.');
+async function excluirAgendamento(id) {
+  try {
+    await excluirAgendamentoAPI(id);
+    await atualizarAgendamentosBanco();
+    setStatus('Agendamento removido com sucesso.');
+  } catch (e) { setStatus('Não foi possível excluir: ' + e.message, true); }
 }
 
+function escaparAgendamento(valor) {
+  return String(valor ?? '').replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
+}
 function renderListaAgendamentos() {
   const container = document.getElementById('listaAgendamentos');
   if (!container) return;
 
-  const lista = obterAgendamentosSalvos();
+  const lista = agendamentosBanco;
 
   if (!lista.length) {
     container.innerHTML = `<div class="agendamento-vazio">Nenhum lançamento agendado.</div>`;
@@ -316,16 +303,16 @@ function renderListaAgendamentos() {
   container.innerHTML = ordenada.map((item) => `
     <div class="agendamento-item">
       <div class="agendamento-item__info">
-        <div class="agendamento-item__titulo">${item.descricao || 'Sem descrição'}</div>
+        <div class="agendamento-item__titulo">${escaparAgendamento(item.descricao || 'Sem descrição')}</div>
         <div class="agendamento-item__sub">
-          ${item.data} • ${item.tipo} • ${item.categoria} • ${item.valor}
+          ${escaparAgendamento(item.data)} • ${escaparAgendamento(item.tipo)} • ${escaparAgendamento(item.categoria)} • ${escaparAgendamento(item.valor)}
         </div>
       </div>
 
       <button
         class="btn-danger btn-excluir-agendamento"
         type="button"
-        data-id="${item.id}"
+        data-id="${escaparAgendamento(item.id)}"
       >
         Excluir
       </button>
@@ -334,49 +321,9 @@ function renderListaAgendamentos() {
 }
 
 async function processarAgendamentosPendentes() {
-
-  const hoje = new Date();
-  hoje.setHours(0, 0, 0, 0);
-
-  const lista = obterAgendamentosSalvos();
-  if (!lista.length) return false;
-
-  const restantes = [];
-  let processouAlgo = false;
-
-  for (const item of lista) {
-    const dataExecucao = parseDataAgendada(item.data);
-
-    if (!dataExecucao || dataExecucao > hoje) {
-      restantes.push(item);
-      continue;
-    }
-
-    try {
-      await salvarLancamentoAPI({
-        data: item.data,
-        tipo: item.tipo,
-        descricao: item.descricao,
-        categoria: item.categoria,
-        valor: item.valor,
-        pagamento: item.pagamento
-      });
-
-      processouAlgo = true;
-    } catch (error) {
-      console.error('Erro ao processar agendamento:', error);
-      restantes.push(item);
-    }
-  }
-
-  salvarAgendamentosSalvos(restantes);
-  renderListaAgendamentos();
-
-  if (processouAlgo) {
-    setStatus('Agendamentos vencidos lançados no banco.');
-  }
-
-  return processouAlgo;
+  const resultado = await processarAgendamentosAPI();
+  await atualizarAgendamentosBanco();
+  return resultado.processados > 0;
 }
 
 function iniciarEdicaoLancamento(id) {
@@ -384,11 +331,6 @@ function iniciarEdicaoLancamento(id) {
 
   if (!lancamento) {
     setStatus('Não foi possível localizar o lançamento para edição.', true);
-    return;
-  }
-
-  if (lancamento.parcelado && lancamento.grupoParcelamento) {
-    abrirParcelamento(lancamento.grupoParcelamento);
     return;
   }
 
@@ -423,10 +365,6 @@ async function atualizarTelaCompleta() {
   renderTabela(lancamentos);
   atualizarControleMesLancamentos(lancamentos, mesLancamentosSelecionado);
 
-  if (typeof renderParcelamentos === 'function') {
-    renderParcelamentos(lancamentos);
-  }
-
   if (tabAtiva === 'dashboard') {
     await atualizarDashboardComContas();
   }
@@ -442,21 +380,10 @@ async function atualizarTelaCompleta() {
 }
 
 async function mudarMesDashboard(direcao) {
-  const lancamentosAnaliticos = obterLancamentosAnaliticos();
-  const mesesDisponiveis = obterMesesDisponiveis(lancamentosAnaliticos);
-
-  if (mesesDisponiveis.length === 0) return;
-
-  const indiceAtual = mesesDisponiveis.indexOf(mesDashboardSelecionado);
-
-  if (indiceAtual === -1) {
-    mesDashboardSelecionado = mesesDisponiveis[mesesDisponiveis.length - 1];
-  } else {
-    const novoIndice = indiceAtual + direcao;
-    if (novoIndice < 0 || novoIndice >= mesesDisponiveis.length) return;
-    mesDashboardSelecionado = mesesDisponiveis[novoIndice];
-  }
-
+  ajustarMesDashboardSelecionado();
+  const [mes, ano] = mesDashboardSelecionado.split('/').map(Number);
+  const destino = new Date(ano, mes - 1 + direcao, 1);
+  mesDashboardSelecionado = `${String(destino.getMonth() + 1).padStart(2, '0')}/${destino.getFullYear()}`;
   await atualizarDashboardComContas();
 }
 
@@ -535,19 +462,13 @@ async function salvarLancamento() {
       return;
     }
 
-    setStatus(novo.parcelado ? 'Criando parcelamento...' : 'Salvando lançamento...');
-    const resposta = await salvarLancamentoAPI(novo);
-    const grupoCriado = novo.parcelado ? resposta?.dados?.grupoParcelamento : null;
+    setStatus('Salvando lançamento...');
+    await salvarLancamentoAPI(novo);
     limparFormularioSegura();
     preencherDataAtualNoFormulario();
     await carregarDados();
 
-    if (grupoCriado && typeof abrirParcelamento === 'function') {
-      await abrirParcelamento(grupoCriado);
-      setStatus('Compra parcelada criada. Acompanhe o saldo e marque as parcelas conforme forem pagas.');
-    } else {
-      setStatus('Lançamento salvo com sucesso.');
-    }
+    setStatus('Lançamento salvo com sucesso.');
   } catch (error) {
     console.error(error);
     setStatus(`Erro ao salvar: ${error.message}`, true);
@@ -597,10 +518,6 @@ async function ativarTab(tabId) {
 
   if (tabId === 'metas' && typeof atualizarPainelMetas === 'function') {
     atualizarPainelMetas(lancamentosAnaliticos);
-  }
-
-  if (tabId === 'parcelamentos' && typeof renderParcelamentos === 'function') {
-    renderParcelamentos(lancamentos);
   }
 
   if (tabId === 'gastosFixos' && typeof carregarGastosFixos === 'function') {
@@ -693,11 +610,6 @@ if (typeof filtroOrigem !== 'undefined' && filtroOrigem) {
 
   if (typeof financeTableBody !== 'undefined' && financeTableBody) {
     financeTableBody.addEventListener('click', async (event) => {
-      const botaoGerenciar = event.target.closest('.btn-gerenciar-parcelamento');
-      if (botaoGerenciar) {
-        await abrirParcelamento(botaoGerenciar.dataset.grupo);
-        return;
-      }
 
       const botaoEditar = event.target.closest('.btn-editar');
       if (botaoEditar) {
@@ -751,6 +663,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     return;
   }
 
+  try { await carregarPreferenciasBanco(); }
+  catch (e) { alert('Não foi possível carregar metas e preferências. Confira a migração SQL e recarregue a página. ' + e.message); }
+
   if (typeof inicializarFormulario === 'function') {
     inicializarFormulario([]);
   }
@@ -760,9 +675,6 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
   if (typeof inicializarGastosFixos === 'function') {
     inicializarGastosFixos();
-  }
-  if (typeof configurarEventosParcelamentos === 'function') {
-    configurarEventosParcelamentos();
   }
 
   preencherDataAtualNoFormulario();
@@ -774,15 +686,13 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   await carregarDados();
 
-  const processouAgendamentos = await processarAgendamentosPendentes();
-  if (processouAgendamentos) {
-    await carregarDados();
-  }
+  try {
+    await atualizarAgendamentosBanco();
+    await importarAgendamentosLocais();
+    const processouAgendamentos = await processarAgendamentosPendentes();
+    if (processouAgendamentos) await carregarDados();
+  } catch (e) { setStatus('Não foi possível carregar/processar agendamentos: ' + e.message, true); }
 });
 function obterLancamentosAnaliticos() {
-  return lancamentos.filter(item => {
-    if (!item.parcelado) return true;
-    if (!item.grupoParcelamento) return true; // compatibilidade com parcelas antigas
-    return item.parcelaPaga === true;
-  });
+  return lancamentos;
 }

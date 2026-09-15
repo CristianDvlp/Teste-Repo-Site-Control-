@@ -8,17 +8,14 @@ const perfilCatalogo = [
   ['gastos', 'Total de despesas realizadas', 'Despesas no período selecionado.', 'Valores', true],
   ['vales', 'Vales', 'Valor separado dos ganhos e despesas.', 'Valores', true],
   ['mediaDespesa', 'Média por despesa', 'Total de despesas dividido pela quantidade de despesas realizadas.', 'Valores', false],
-  ['maiorDespesa', 'Maior despesa', 'Valor e categoria do maior registro de despesa realizado; parcelas são registros separados.', 'Valores', false],
+  ['maiorDespesa', 'Maior despesa', 'Valor e categoria do maior registro de despesa realizado.', 'Valores', false],
   ['maiorGanho', 'Maior ganho', 'Valor do maior registro de receita realizado.', 'Valores', false],
   ['percentualGasto', 'Percentual dos ganhos gasto', 'Despesas realizadas divididas pelos ganhos realizados.', 'Valores', false],
-  ['quantidade', 'Lançamentos no período', 'Cada parcela conta como um lançamento.', 'Atividade', true],
+  ['quantidade', 'Lançamentos no período', 'Quantidade de registros no período.', 'Atividade', true],
   ['historico', 'Lançamentos no histórico', 'Todos os registros existentes com data até hoje, independentemente do filtro.', 'Atividade', false],
   ['realizados', 'Lançamentos realizados', 'Quantidade de registros considerados pagos ou recebidos.', 'Atividade', false],
   ['qtdDespesas', 'Quantidade de despesas realizadas', 'Número de despesas realizadas no período.', 'Atividade', false],
   ['qtdGanhos', 'Quantidade de ganhos realizados', 'Número de receitas realizadas no período.', 'Atividade', false],
-  ['pagar', 'Parcelas a pagar no período', 'Quantidade e valor pendentes com data no período, até hoje.', 'Parcelas', true],
-  ['receber', 'Parcelas a receber no período', 'Quantidade e valor pendentes com data no período, até hoje.', 'Parcelas', true],
-  ['futuras', 'Parcelas futuras a pagar', 'Todas as parcelas de despesas não pagas com data após hoje; independe do filtro.', 'Parcelas', false],
   ['categoria', 'Categoria com maior despesa', 'Categoria com o maior total de despesas realizadas.', 'Hábitos e datas', true],
   ['pagamento', 'Forma de pagamento mais usada', 'Forma mais frequente entre as despesas realizadas; empates exibem todas.', 'Hábitos e datas', false],
   ['ultimo', 'Data mais recente no período', 'Data do lançamento, não a data de cadastro.', 'Hábitos e datas', true],
@@ -27,16 +24,9 @@ const perfilCatalogo = [
 const perfilPadrao = () => perfilCatalogo.filter(item => item[4]).map(item => item[0]);
 let perfilSelecionados = perfilPadrao();
 
-function chaveOpcoesPerfil() {
-  return 'perfil_indicadores_v1_' + (window.usuarioAtualChave || 'sessao');
-}
-
 function carregarOpcoesPerfil() {
-  perfilSelecionados = perfilPadrao();
-  try {
-    const salvo = JSON.parse(localStorage.getItem(chaveOpcoesPerfil()));
-    if (Array.isArray(salvo)) perfilSelecionados = perfilCatalogo.filter(item => salvo.includes(item[0])).map(item => item[0]);
-  } catch { /* preferências inválidas usam o padrão */ }
+  const salvo = preferenciasBanco.perfilIndicadores;
+  perfilSelecionados = Array.isArray(salvo) ? perfilCatalogo.filter(item => salvo.includes(item[0])).map(item => item[0]) : perfilPadrao();
 }
 
 function fecharEditorPerfil() {
@@ -86,15 +76,18 @@ function marcarOpcoesPerfil(ids) {
   document.querySelectorAll('#perfilOpcoes input').forEach(input => { input.checked = ids.includes(input.value); });
 }
 
-function salvarOpcoesPerfil() {
-  perfilSelecionados = [...document.querySelectorAll('#perfilOpcoes input:checked')].map(input => input.value);
-  let mensagem = 'Preferências salvas neste navegador.';
-  try { localStorage.setItem(chaveOpcoesPerfil(), JSON.stringify(perfilSelecionados)); }
-  catch { mensagem = 'Resumo atualizado, mas o navegador não permitiu salvar suas preferências. A seleção pode ser perdida ao reabrir.'; }
-  fecharEditorPerfil();
-  renderResumoPerfil();
-  document.getElementById('perfilPreferenciasStatus').textContent = mensagem;
-  document.getElementById('perfilPersonalizar').focus();
+async function salvarOpcoesPerfil() {
+  const ids = [...document.querySelectorAll('#perfilOpcoes input:checked')].map(input => input.value);
+  const botao = document.getElementById('perfilSalvar');
+  botao.disabled = true;
+  try {
+    await salvarPreferenciaBanco('perfilIndicadores', ids);
+    perfilSelecionados = ids;
+    fecharEditorPerfil();
+    renderResumoPerfil();
+    document.getElementById('perfilPreferenciasStatus').textContent = 'Preferências salvas na sua conta.';
+  } catch (e) { document.getElementById('perfilPreferenciasStatus').textContent = 'Não foi possível salvar: ' + e.message; }
+  finally { botao.disabled = false; }
 }
 
 function fecharMenuPerfil() {
@@ -116,17 +109,12 @@ window.toggleMenuUsuario = function () {
   }
 };
 
-function chavePrivacidadePerfil() {
-  return 'perfil_valores_ocultos_v1_' + (window.usuarioAtualChave || 'sessao');
-}
-
 function abrirResumoPerfil() {
   fecharMenuPerfil();
   carregarOpcoesPerfil();
   fecharEditorPerfil();
   document.getElementById('perfilPreferenciasStatus').textContent = '';
-  perfilOculto = true;
-  try { perfilOculto = localStorage.getItem(chavePrivacidadePerfil()) !== 'false'; } catch { /* armazenamento opcional */ }
+  perfilOculto = preferenciasBanco.perfilOculto !== false;
   document.getElementById('perfilNomeResumo').textContent = document.getElementById('nomeUsuarioHeader').textContent;
   renderResumoPerfil();
   document.getElementById('resumoPerfil').showModal();
@@ -142,8 +130,7 @@ function calcularResumoPerfil(dados, periodo, agora = new Date()) {
   const valido = item => Number.isFinite(data(item).getTime()) && data(item).getTime() > 0;
   const ateHoje = dados.filter(item => valido(item) && data(item) <= hoje);
   const selecionados = ateHoje.filter(item => data(item) >= inicio);
-  const pendente = item => !!item.parcelado && !!item.grupoParcelamento && item.parcelaPaga !== true;
-  const realizados = selecionados.filter(item => !pendente(item));
+  const realizados = selecionados;
   const tipo = item => obterTipoLancamento(item);
   const soma = itens => itens.reduce((total, item) => total + Math.round(obterValorAbsoluto(item) * 100), 0) / 100;
   const porTipo = (itens, nome) => itens.filter(item => tipo(item) === nome);
@@ -157,7 +144,7 @@ function calcularResumoPerfil(dados, periodo, agora = new Date()) {
   const ultimo = [...selecionados].sort((a, b) => data(b) - data(a))[0];
   const inicioAnterior = new Date(hoje.getFullYear(), hoje.getMonth() - 1, 1);
   const fimAnterior = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
-  const despesasAnteriores = soma(dados.filter(item => valido(item) && data(item) >= inicioAnterior && data(item) < fimAnterior && !pendente(item) && tipo(item) === 'Despesa'));
+  const despesasAnteriores = soma(dados.filter(item => valido(item) && data(item) >= inicioAnterior && data(item) < fimAnterior && tipo(item) === 'Despesa'));
   const ganhos = soma(porTipo(realizados, 'Receita'));
   const gastos = soma(despesas);
   const receitas = porTipo(realizados, 'Receita');
@@ -172,14 +159,12 @@ function calcularResumoPerfil(dados, periodo, agora = new Date()) {
   return {
     totalHistorico: ateHoje.length, quantidade: selecionados.length, ganhos, gastos, resultado: ganhos - gastos,
     vales: soma(porTipo(realizados, 'Vales')), realizados: realizados.length,
-    pagar: porTipo(selecionados.filter(pendente), 'Despesa'), receber: porTipo(selecionados.filter(pendente), 'Receita'),
     maior, ultimo, despesasAnteriores, soma,
     qtdDespesas: despesas.length, qtdGanhos: receitas.length,
     mediaDespesa: despesas.length ? gastos / despesas.length : null,
     maiorDespesa: maiorValor(despesas), maiorGanho: maiorValor(receitas),
     percentualGasto: ganhos > 0 ? gastos / ganhos * 100 : null,
     pagamento, frequencia,
-    futuras: porTipo(dados.filter(item => valido(item) && data(item) > hoje && pendente(item)), 'Despesa')
   };
 }
 
@@ -202,7 +187,7 @@ function renderResumoPerfil() {
   const periodo = document.getElementById('perfilPeriodo').value;
   const resumo = calcularResumoPerfil(perfilDados, periodo);
   const moeda = valor => perfilOculto ? 'R$ •••••' : formatarMoeda(valor);
-  status.textContent = perfilSelecionados.length ? 'Período selecionado até hoje. Indicadores de histórico e parcelas futuras usam seus próprios intervalos.' : 'Seu resumo está vazio. Clique em Personalizar resumo para escolher as informações.';
+  status.textContent = perfilSelecionados.length ? 'Período selecionado até hoje. O indicador de histórico considera todos os registros até hoje.' : 'Seu resumo está vazio. Clique em Personalizar resumo para escolher as informações.';
   const card = (id, titulo, valor, detalhe = '') => {
     if (!perfilSelecionados.includes(id)) return;
     const caixa = document.createElement('div');
@@ -223,9 +208,6 @@ function renderResumoPerfil() {
   card('qtdGanhos', 'Quantidade de ganhos realizados', String(resumo.qtdGanhos));
   card('ganhos', 'Total de ganhos realizados', moeda(resumo.ganhos));
   card('gastos', 'Total de despesas realizadas', moeda(resumo.gastos));
-  card('pagar', 'Parcelas a pagar no período', moeda(resumo.soma(resumo.pagar)), `${resumo.pagar.length} pendentes`);
-  card('receber', 'Parcelas a receber no período', moeda(resumo.soma(resumo.receber)), `${resumo.receber.length} pendentes`);
-  card('futuras', 'Parcelas futuras a pagar', moeda(resumo.soma(resumo.futuras)), `${resumo.futuras.length} pendentes após hoje, independentemente do filtro.`);
   card('vales', 'Vales no período', moeda(resumo.vales), 'Separados dos ganhos e despesas.');
   card('mediaDespesa', 'Média por despesa', resumo.mediaDespesa === null ? 'Sem despesas' : moeda(resumo.mediaDespesa));
   card('maiorDespesa', 'Maior despesa realizada', resumo.maiorDespesa ? moeda(obterValorAbsoluto(resumo.maiorDespesa)) : 'Sem despesas', resumo.maiorDespesa ? String(resumo.maiorDespesa.categoria || 'Sem categoria') : '');
@@ -259,10 +241,16 @@ document.getElementById('perfilCancelar').addEventListener('click', () => {
 document.getElementById('perfilMarcarTodos').addEventListener('click', () => marcarOpcoesPerfil(perfilCatalogo.map(item => item[0])));
 document.getElementById('perfilDesmarcarTodos').addEventListener('click', () => marcarOpcoesPerfil([]));
 document.getElementById('perfilRestaurar').addEventListener('click', () => marcarOpcoesPerfil(perfilPadrao()));
-document.getElementById('perfilOlho').addEventListener('click', () => {
-  perfilOculto = !perfilOculto;
-  try { localStorage.setItem(chavePrivacidadePerfil(), String(perfilOculto)); } catch { /* sem persistência */ }
-  renderResumoPerfil();
+document.getElementById('perfilOlho').addEventListener('click', async () => {
+  const botao = document.getElementById('perfilOlho');
+  const proximo = !perfilOculto;
+  botao.disabled = true;
+  try {
+    await salvarPreferenciaBanco('perfilOculto', proximo);
+    perfilOculto = proximo;
+    renderResumoPerfil();
+  } catch (e) { document.getElementById('perfilPreferenciasStatus').textContent = 'Não foi possível salvar: ' + e.message; }
+  finally { botao.disabled = false; }
 });
 document.getElementById('perfilTentar').addEventListener('click', () => carregarDados());
 document.addEventListener('click', event => {

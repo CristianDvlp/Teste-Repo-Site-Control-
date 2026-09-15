@@ -1,5 +1,5 @@
 import { neon } from "@neondatabase/serverless";
-import jwt from "jsonwebtoken";
+import { validarTokenSessao } from "../lib/conta.js";
 
 const sql = neon(process.env.DATABASE_URL);
 
@@ -18,14 +18,14 @@ function pegarCookie(req, nome) {
   return null;
 }
 
-function obterUsuarioLogado(req) {
+async function obterUsuarioLogado(req) {
   const token = pegarCookie(req, "session");
 
   if (!token) {
     throw new Error("NAO_LOGADO");
   }
 
-  const dados = jwt.verify(token, process.env.JWT_SECRET);
+    const dados = await validarTokenSessao(token);
 
   return {
     id: dados.id,
@@ -195,7 +195,13 @@ async function criarAgendamento(req, res, usuarioId) {
     });
   }
 
-  if (dataBanco < dataAtualBrasil()) {
+  const migracao = req.body?.acao === 'importar-local';
+  const origem = String(req.body?.chaveOrigem || '');
+  if ((migracao && !origem) || (origem && !/^[a-zA-Z0-9_-]{1,150}$/.test(origem))) {
+    return res.status(400).json({ erro: 'Identificador do agendamento inválido.' });
+  }
+  const chaveOrigem = origem ? (migracao ? 'local:' : `usuario:${usuarioId}:`) + origem : null;
+  if (!migracao && dataBanco < dataAtualBrasil()) {
     return res.status(400).json({
       erro: "A data do agendamento não pode estar no passado"
     });
@@ -210,7 +216,8 @@ async function criarAgendamento(req, res, usuarioId) {
       categoria,
       valor,
       pagamento,
-      status
+      status,
+      chave_origem
     )
     VALUES (
       ${usuarioId},
@@ -220,8 +227,10 @@ async function criarAgendamento(req, res, usuarioId) {
       ${categoriaFinal},
       ${valorFinal},
       ${pagamentoFinal},
-      'pendente'
+      'pendente',
+      ${chaveOrigem}
     )
+    ON CONFLICT (chave_origem) DO NOTHING
     RETURNING
       id,
       TO_CHAR(data_agendada, 'DD/MM/YYYY') AS data,
@@ -233,6 +242,11 @@ async function criarAgendamento(req, res, usuarioId) {
       status
   `;
 
+  if (!criado.length) {
+    const [existente] = await sql`SELECT id FROM agendamentos WHERE chave_origem = ${chaveOrigem} AND usuario_id = ${usuarioId}`;
+    if (!existente) return res.status(409).json({ erro: 'Este agendamento já foi importado para outra conta. O item local foi preservado.' });
+    return res.status(200).json({ id: existente.id, jaImportado: true });
+  }
   return res.status(201).json(criado[0]);
 }
 
@@ -364,12 +378,13 @@ async function cancelarAgendamento(req, res, usuarioId) {
 }
 
 export default async function handler(req, res) {
+  res.setHeader('Cache-Control', 'no-store');
   try {
-    const usuarioLogado = obterUsuarioLogado(req);
+    const usuarioLogado = await obterUsuarioLogado(req);
     const usuarioId = usuarioLogado.id;
 
     if (req.method === "GET") {
-      return listarAgendamentos(res, usuarioId);
+      return await listarAgendamentos(res, usuarioId);
     }
 
     if (req.method === "POST") {
@@ -378,14 +393,14 @@ export default async function handler(req, res) {
         .toLowerCase();
 
       if (acao === "processar") {
-        return processarAgendamentos(res, usuarioId);
+        return await processarAgendamentos(res, usuarioId);
       }
 
-      return criarAgendamento(req, res, usuarioId);
+      return await criarAgendamento(req, res, usuarioId);
     }
 
     if (req.method === "DELETE") {
-      return cancelarAgendamento(req, res, usuarioId);
+      return await cancelarAgendamento(req, res, usuarioId);
     }
 
     return res.status(405).json({

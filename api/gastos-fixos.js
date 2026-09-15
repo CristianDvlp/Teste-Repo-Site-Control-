@@ -1,5 +1,5 @@
 import { neon } from "@neondatabase/serverless";
-import jwt from "jsonwebtoken";
+import { validarTokenSessao } from "../lib/conta.js";
 
 const sql = neon(process.env.DATABASE_URL);
 
@@ -18,14 +18,14 @@ function pegarCookie(req, nome) {
   return null;
 }
 
-function obterUsuarioLogado(req) {
+async function obterUsuarioLogado(req) {
   const token = pegarCookie(req, "session");
 
   if (!token) {
     throw new Error("NAO_LOGADO");
   }
 
-  const dados = jwt.verify(token, process.env.JWT_SECRET);
+    const dados = await validarTokenSessao(token);
 
   return {
     id: dados.id,
@@ -141,7 +141,7 @@ function tratarErro(res, erro) {
 
 export default async function handler(req, res) {
   try {
-    const usuarioLogado = obterUsuarioLogado(req);
+    const usuarioLogado = await obterUsuarioLogado(req);
     const usuarioId = usuarioLogado.id;
 
  if (req.method === "GET") {
@@ -280,8 +280,7 @@ export default async function handler(req, res) {
             pagamento,
             ativo,
             tipo_controle,
-            total_parcelas,
-            parcela_inicial,
+
             mes_inicio,
             mes_referencia
           )
@@ -296,8 +295,6 @@ export default async function handler(req, res) {
             TRUE,
             'fixo',
             NULL,
-            NULL,
-            NULL,
             ${mesReferenciaFinal}
           )
         RETURNING
@@ -309,8 +306,7 @@ export default async function handler(req, res) {
           pagamento,
           ativo,
           tipo_controle,
-          total_parcelas,
-          parcela_inicial,
+
           mes_inicio,
           mes_referencia,
           TO_CHAR(criado_em, 'DD/MM/YYYY HH24:MI') AS criado_em
@@ -408,8 +404,7 @@ export default async function handler(req, res) {
           pagamento = ${pagamentoFinal},
           ativo = ${ativoFinal},
           tipo_controle = 'fixo',
-          total_parcelas = NULL,
-          parcela_inicial = NULL,
+
           mes_inicio = NULL
         WHERE id = ${id}
           AND usuario_id = ${usuarioId}
@@ -422,8 +417,7 @@ export default async function handler(req, res) {
           pagamento,
           ativo,
           tipo_controle,
-          total_parcelas,
-          parcela_inicial,
+
           mes_inicio,
           mes_referencia,
           TO_CHAR(criado_em, 'DD/MM/YYYY HH24:MI') AS criado_em
