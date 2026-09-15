@@ -280,8 +280,7 @@ export default async function handler(req, res) {
             pagamento,
             ativo,
             tipo_controle,
-            total_parcelas,
-            parcela_inicial,
+
             mes_inicio,
             mes_referencia
           )
@@ -296,8 +295,6 @@ export default async function handler(req, res) {
             TRUE,
             'fixo',
             NULL,
-            NULL,
-            NULL,
             ${mesReferenciaFinal}
           )
         RETURNING
@@ -309,8 +306,7 @@ export default async function handler(req, res) {
           pagamento,
           ativo,
           tipo_controle,
-          total_parcelas,
-          parcela_inicial,
+
           mes_inicio,
           mes_referencia,
           TO_CHAR(criado_em, 'DD/MM/YYYY HH24:MI') AS criado_em
@@ -408,8 +404,7 @@ export default async function handler(req, res) {
           pagamento = ${pagamentoFinal},
           ativo = ${ativoFinal},
           tipo_controle = 'fixo',
-          total_parcelas = NULL,
-          parcela_inicial = NULL,
+
           mes_inicio = NULL
         WHERE id = ${id}
           AND usuario_id = ${usuarioId}
@@ -422,8 +417,7 @@ export default async function handler(req, res) {
           pagamento,
           ativo,
           tipo_controle,
-          total_parcelas,
-          parcela_inicial,
+
           mes_inicio,
           mes_referencia,
           TO_CHAR(criado_em, 'DD/MM/YYYY HH24:MI') AS criado_em

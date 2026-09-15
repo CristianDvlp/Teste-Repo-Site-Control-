@@ -6,10 +6,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Teste - Controle Financeiro</title>
 
-  <link rel="stylesheet" href="css/style.css?v=consolidado4" />
-  <link rel="stylesheet" href="css/perfil.css?v=consolidado4" />
-  <link rel="stylesheet" href="css/conta.css?v=consolidado4" />
+  <link rel="stylesheet" href="css/style.css?v=metas2" />
+  <link rel="stylesheet" href="css/perfil.css?v=metas2" />
+  <link rel="stylesheet" href="css/conta.css?v=metas2" />
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link rel="stylesheet" href="css/metas.css?v=metas2">
   <link rel="icon" type="image/png" href="./favicon.png">
 </head>
 
@@ -29,10 +30,6 @@
         <span class="sidebar-text">Lançamentos</span>
       </button>
 
-      <button class="sidebar-link" type="button" data-tab-target="parcelamentos">
-        <span class="sidebar-icon">🧾</span>
-        <span class="sidebar-text">Parcelamentos</span>
-      </button>
 
       <button class="sidebar-link" type="button" data-tab-target="gastosFixos">
         <span class="sidebar-icon">💳</span>
@@ -126,7 +123,7 @@
       <p id="perfilPreferenciasStatus" class="perfil-legenda" role="status"></p>
       <div id="perfilIndicadores" class="perfil-grid"></div>
       <p id="perfilComparacao" class="perfil-comparacao"></p>
-      <p class="perfil-nota">Valores realizados seguem os lançamentos: parcelas não pagas ficam fora dos ganhos e despesas. Lançamentos avulsos são considerados realizados. Vales aparecem separados e não entram no resultado. Contas fixas ainda não lançadas não entram neste resumo. Cada parcela conta como um lançamento.</p>
+      <p class="perfil-nota">Valores consideram os lançamentos até hoje. Vales aparecem separados e não entram no resultado. Contas fixas ainda não lançadas não entram neste resumo.</p>
       <button type="button" id="perfilTentar" class="btn-secondary" hidden>Tentar carregar novamente</button>
     </dialog>
     <div id="modalSenha" class="modal-senha-overlay" style="display:none;">
@@ -164,7 +161,6 @@
     <div class="container">
       <div class="tabs">
         <button class="tab-btn active" data-tab="lancamentos" type="button">Lançamentos</button>
-        <button class="tab-btn" data-tab="parcelamentos" type="button">Parcelamentos</button>
         <button class="tab-btn" data-tab="gastosFixos" type="button">Gastos fixos</button>
         <button class="tab-btn" data-tab="dashboard" type="button">Dashboard do mês</button>
         <button class="tab-btn" data-tab="comparativo" type="button">Comparativo anual</button>
@@ -181,7 +177,7 @@
 
             <div class="info">
               O lançamento possui estes campos:
-              <strong>Data, Tipo, Descrição, Categoria, Valor e Tipo de Pagamento</strong>. Para compras parceladas, informe o valor total e o sistema cria as parcelas futuras com valores iguais ou personalizados.
+              <strong>Data, Tipo, Descrição, Categoria, Valor e Tipo de Pagamento</strong>. Registre suas receitas, despesas e vales de forma simples.
             </div>
 
             <form id="financeForm" class="form-grid">
@@ -232,44 +228,6 @@
                 </select>
               </label>
 
-              <label class="campo-checkbox campo-parcelado" for="parcelado">
-                <span>Compra parcelada?</span>
-                <div class="checkbox-lancamento">
-                  <input type="checkbox" id="parcelado" name="parcelado" />
-                  <span>Sim, quero gerar e acompanhar as parcelas</span>
-                </div>
-              </label>
-
-              <div id="parcelamentoPainel" class="parcelamento-config form-span-all" hidden>
-                <div class="parcelamento-config__header">
-                  <div>
-                    <strong>Configuração do parcelamento</strong>
-                    <p>O vencimento informado acima será usado na 1ª parcela. As próximas avançam mês a mês.</p>
-                  </div>
-                </div>
-
-                <div class="parcelamento-config__grid">
-                  <label for="totalParcelas">
-                    <span>Quantidade de parcelas</span>
-                    <input type="number" id="totalParcelas" name="totalParcelas" min="2" max="60" step="1" placeholder="Ex: 10" />
-                  </label>
-
-                  <label for="modoParcelas">
-                    <span>Valores das parcelas</span>
-                    <select id="modoParcelas" name="modoParcelas">
-                      <option value="iguais">Dividir igualmente</option>
-                      <option value="personalizadas">Personalizar valores</option>
-                    </select>
-                  </label>
-                </div>
-
-                <div class="parcelamento-aviso">
-                  Marque <strong>Pago</strong> apenas nas parcelas que você já quitou. As pendentes ficam no saldo a pagar e não entram como despesa realizada nos dashboards.
-                </div>
-
-                <div id="parcelasPreview" class="parcelas-preview"></div>
-                <div id="parcelasResumo" class="parcelas-resumo"></div>
-              </div>
             </form>
 
             <div class="actions">
@@ -353,8 +311,6 @@
                   <th>Categoria</th>
                   <th class="col-valor">Valor</th>
                   <th>Tipo de pagamento</th>
-                  <th>Parcela</th>
-                  <th>Status</th>
                   <th>Ações</th>
                 </tr>
               </thead>
@@ -364,56 +320,6 @@
         </div>
       </section>
 
-      <section id="parcelamentos" class="tab-content">
-        <div class="parcelamentos-hero">
-          <div>
-            <span class="parcelamentos-kicker">Compromissos futuros</span>
-            <h2>Parcelamentos</h2>
-            <p>Acompanhe quanto já foi pago, quanto ainda falta e o vencimento de cada parcela.</p>
-          </div>
-          <button id="btnNovoParcelamento" class="btn-primary" type="button">+ Nova compra parcelada</button>
-        </div>
-
-        <div class="parcelamentos-resumo-grid">
-          <div class="parcelamento-total-card">
-            <span>Valor original</span>
-            <strong id="parcelamentosTotalOriginal">R$ 0,00</strong>
-            <small>Total das compras parceladas</small>
-          </div>
-          <div class="parcelamento-total-card pago">
-            <span>Já pago</span>
-            <strong id="parcelamentosTotalPago">R$ 0,00</strong>
-            <small>Parcelas marcadas como pagas</small>
-          </div>
-          <div class="parcelamento-total-card aberto">
-            <span>Saldo a pagar</span>
-            <strong id="parcelamentosSaldoAberto">R$ 0,00</strong>
-            <small>Compromisso que ainda está pendente</small>
-          </div>
-          <div class="parcelamento-total-card mes">
-            <span>Pendente neste mês</span>
-            <strong id="parcelamentosPendenteMes">R$ 0,00</strong>
-            <small id="parcelamentosPendenteMesLabel">Parcelas do mês atual</small>
-          </div>
-        </div>
-
-        <div class="card card-spacing parcelamentos-toolbar">
-          <div>
-            <h3>Suas compras parceladas</h3>
-            <p>Abra uma compra para conferir as parcelas ou alterar o status de pagamento.</p>
-          </div>
-          <label for="filtroParcelamentos">
-            <span>Mostrar</span>
-            <select id="filtroParcelamentos">
-              <option value="abertos">Em aberto</option>
-              <option value="todos">Todos</option>
-              <option value="quitados">Quitados</option>
-            </select>
-          </label>
-        </div>
-
-        <div id="listaParcelamentos" class="parcelamentos-lista"></div>
-      </section>
 
       <section id="gastosFixos" class="tab-content">
         <div class="card card-destaque">
@@ -511,7 +417,6 @@
                   <th>Categoria</th>
                   <th class="col-valor">Valor previsto</th>
                   <th>Pagamento</th>
-                  <th>Status</th>
                   <th>Pago em</th>
                   <th>Ações</th>
                 </tr>
@@ -660,286 +565,57 @@
         </div>
       </section>
 
-      <section id="metas" class="tab-content metas-v3">
-        <div class="card metas-v3__header-card">
-          <div class="metas-v3__header">
-            <div class="metas-v3__title-wrap">
-              <h2>🎯 Metas por tipo</h2>
-              <p>Acompanhe suas metas financeiras por categoria e visualize seu progresso mensal de forma clara e
-                organizada.</p>
-            </div>
-
-            <div class="metas-v3__controls">
-              <div class="metas-v3__month-nav" id="metaNavegacaoMensal">
-                <button id="btnMetaMesAnterior" class="btn-secondary metas-v3__icon-btn" type="button">←</button>
-                <div class="metas-v3__period-pill" id="metaMesAtualLabel">--/----</div>
-                <button id="btnMetaMesProximo" class="btn-secondary metas-v3__icon-btn" type="button">→</button>
-              </div>
-
-              <div class="metas-v3__year-pill" id="metaAnoAtualLabel" style="display: none;">----</div>
-              <div class="metas-v3__edit-wrap">
-                <button id="btnEditarMetas" class="btn-secondary metas-v3__action-btn" type="button">⚙️ Editar
-                  metas</button>
-
-                <div id="painelEditarMetas" class="card metas-v3__edit-card">
-                  <div class="metas-v3__edit-header">
-                    <h3 id="tituloPainelMetas">Editar metas mensais</h3>
-                  </div>
-
-                  <div class="metas-v3__edit-grid">
-                    <label>
-                      <span id="labelMetaReceita">Meta mensal de Receita</span>
-                      <input id="inputMetaReceita" type="text" inputmode="decimal" placeholder="R$ 0,00">
-                    </label>
-
-                    <label>
-                      <span id="labelMetaInvestido">Meta mensal de Investido</span>
-                      <input id="inputMetaInvestido" type="text" inputmode="decimal" placeholder="R$ 0,00">
-                    </label>
-
-                    <label>
-                      <span id="labelMetaDespesas">Meta mensal de Despesas</span>
-                      <input id="inputMetaDespesas" type="text" inputmode="decimal" placeholder="R$ 0,00">
-                    </label>
-                  </div>
-
-                  <div class="metas-v3__edit-actions">
-                    <button id="btnSalvarMetasConfig" class="btn-primary" type="button">Salvar metas</button>
-                  </div>
-                </div>
-              </div>
-              <button id="btnToggleVisaoMetas" class="btn-secondary metas-v3__action-btn" type="button">📅 Ver metas
-                anuais</button>
-            </div>
-          </div>
+      <section id="metas" class="tab-content goals-page">
+        <header class="goals-header">
+          <div><span class="goals-eyebrow">SEU PRÓXIMO PASSO</span><h2>Planos que viram progresso.</h2><p>Defina suas metas e acompanhe cada avanço, no seu ritmo.</p></div>
+          <button class="goals-primary" id="btnEditarMetas" type="button">Editar minhas metas <span aria-hidden="true">↗</span></button>
+        </header>
+        <div class="goals-toolbar">
+          <div class="goals-period"><button id="goalPrev" type="button" aria-label="Período anterior">‹</button><label><span class="sr-goals">Mês de referência</span><input id="goalMonth" type="month" min="2000-01" max="2100-12"></label><button id="goalNext" type="button" aria-label="Próximo período">›</button><button id="goalToday" type="button">Hoje</button></div>
+          <div class="goals-segments" role="group" aria-label="Visualização das metas"><button type="button" id="goalMonthly" aria-pressed="true">Mensal</button><button type="button" id="goalAnnual" aria-pressed="false">Anual</button></div>
         </div>
-
-        <div class="metas-v3__top-grid">
-          <article class="metas-v3__main-card metas-v3__main-card--blue">
-            <div class="metas-v3__main-card-top">
-              <div class="metas-v3__card-icon metas-v3__card-icon--blue">📈</div>
-              <div class="metas-v3__main-card-title-group">
-                <h3>Meta de Receita</h3>
-              </div>
-              <span class="metas-v3__badge" id="metaReceitaBadge">Mensal</span>
-            </div>
-
-            <div class="metas-v3__percent metas-v3__percent--blue" id="metaReceitaPercent">0%</div>
-
-            <div class="metas-v3__progress-track">
-              <div class="metas-v3__progress-fill metas-v3__progress-fill--blue" id="metaReceitaBar"></div>
-            </div>
-
-            <div class="metas-v3__divider"></div>
-
-            <div class="metas-v3__values">
-              <div>
-                <span>Atual</span>
-                <strong id="metaReceitaAtual">R$ 0,00</strong>
-              </div>
-              <div>
-                <span>Meta</span>
-                <strong id="metaReceitaMeta">R$ 0,00</strong>
-              </div>
-            </div>
-          </article>
-
-          <article class="metas-v3__main-card metas-v3__main-card--green">
-            <div class="metas-v3__main-card-top">
-              <div class="metas-v3__card-icon metas-v3__card-icon--green">💼</div>
-              <div class="metas-v3__main-card-title-group">
-                <h3>Meta de Investido</h3>
-              </div>
-              <span class="metas-v3__badge" id="metaInvestidoBadge">Mensal</span>
-            </div>
-
-            <div class="metas-v3__percent metas-v3__percent--green" id="metaInvestidoPercent">0%</div>
-
-            <div class="metas-v3__progress-track">
-              <div class="metas-v3__progress-fill metas-v3__progress-fill--green" id="metaInvestidoBar"></div>
-            </div>
-
-            <div class="metas-v3__divider"></div>
-
-            <div class="metas-v3__values">
-              <div>
-                <span>Atual</span>
-                <strong id="metaInvestidoAtual">R$ 0,00</strong>
-              </div>
-              <div>
-                <span>Meta</span>
-                <strong id="metaInvestidoMeta">R$ 0,00</strong>
-              </div>
-            </div>
-          </article>
-
-          <article class="metas-v3__main-card metas-v3__main-card--red">
-            <div class="metas-v3__main-card-top">
-              <div class="metas-v3__card-icon metas-v3__card-icon--red">📉</div>
-              <div class="metas-v3__main-card-title-group">
-                <h3>Meta de Despesas</h3>
-              </div>
-              <span class="metas-v3__badge" id="metaDespesasBadge">Mensal</span>
-            </div>
-
-            <div class="metas-v3__percent metas-v3__percent--red" id="metaDespesasPercent">0%</div>
-
-            <div class="metas-v3__progress-track">
-              <div class="metas-v3__progress-fill metas-v3__progress-fill--red" id="metaDespesasBar"></div>
-            </div>
-
-            <div class="metas-v3__divider"></div>
-
-            <div class="metas-v3__values">
-              <div>
-                <span>Atual</span>
-                <strong id="metaDespesasAtual">R$ 0,00</strong>
-              </div>
-              <div>
-                <span>Meta</span>
-                <strong id="metaDespesasMeta">R$ 0,00</strong>
-              </div>
-            </div>
-          </article>
+        <div id="goalNotice" class="goals-notice" role="status" aria-live="polite"></div>
+        <div class="goals-overview"><div><span class="goals-eyebrow" id="goalPeriodLabel">SEU MÊS</span><h3 id="goalOverviewTitle">Dê uma direção ao seu dinheiro.</h3><p id="goalOverviewText">Comece definindo os valores que deseja alcançar.</p></div><div class="goals-overview-count"><strong id="goalOverviewCount">0/3</strong><span>objetivos no caminho</span></div></div>
+        <div class="goals-cards" id="goalCards"></div>
+        <div class="goals-bottom">
+          <article class="goals-panel"><div class="goals-panel-heading"><div><span class="goals-eyebrow">VISÃO DO ANO</span><h3 id="goalHistoryTitle">Seu progresso mês a mês</h3></div><label class="goals-chart-filter"><span class="sr-goals">Indicador do histórico</span><select id="goalMetric"><option value="investido">Investimentos</option><option value="receita">Receitas</option><option value="despesas">Despesas</option></select></label></div><p class="goals-small">Toque em um mês para ver os detalhes. A linha marca sua meta mensal.</p><div class="goals-chart" id="goalHistory"></div><div class="goals-chart-legend"><span><i></i>Valor registrado</span><span>— Meta mensal</span></div></article>
+          <article class="goals-panel goals-plan"><span class="goals-eyebrow">SEU PLANEJAMENTO</span><h3>Um plano que cabe no mês.</h3><div id="goalBudget"></div><p class="goals-small">Metas mensais se repetem ao longo do ano. A visão anual equivale a 12 meses.</p><button class="goals-text-button" type="button" id="goalAdjust">Ajustar meu plano →</button></article>
         </div>
-
-        <div class="metas-v3__bottom-layout">
-          <div class="card metas-v3__comparison-card">
-            <div class="metas-v3__comparison-header">
-              <div>
-                <h3 id="metaComparativoTitulo">Comparativo anual</h3>
-                <p id="metaComparativoSubtitulo">Comparação entre valores atuais e metas para cada categoria.</p>
-              </div>
-
-              <div class="metas-v3__legend">
-                <span><i class="metas-v3__dot metas-v3__dot--dark"></i> Atual</span>
-                <span><i class="metas-v3__dot metas-v3__dot--light"></i> Meta</span>
-              </div>
+        <p class="goals-footnote">Valores registrados até hoje. Investimentos consideram despesas na categoria “Investimento” e ficam separados do limite de despesas. Vales e saldo inicial não entram nas receitas das metas.</p>
+        <dialog id="goalEditor" class="goals-dialog" aria-labelledby="goalEditorTitle">
+          <form id="goalForm" novalidate>
+            <div class="goals-dialog-header"><div><span class="goals-eyebrow">DO SEU JEITO</span><h3 id="goalEditorTitle">Ajuste suas metas mensais</h3></div><button type="button" id="goalClose" class="goals-close" aria-label="Fechar edição">×</button></div>
+            <p class="goals-small">Esses valores valem para todos os meses. Digite, por exemplo, 2500 ou 2.500,50. Use zero para deixar uma meta sem definir.</p>
+            <div class="goals-edit-fields">
+              <label for="inputMetaReceita"><span>Quanto quero receber</span><div class="goals-money-input"><span>R$</span><input id="inputMetaReceita" type="text" inputmode="decimal" autocomplete="off" required aria-describedby="goalFormStatus"></div></label>
+              <label for="inputMetaInvestido"><span>Quanto quero investir</span><div class="goals-money-input"><span>R$</span><input id="inputMetaInvestido" type="text" inputmode="decimal" autocomplete="off" required aria-describedby="goalFormStatus"></div></label>
+              <label for="inputMetaDespesas"><span>Meu limite de despesas</span><div class="goals-money-input"><span>R$</span><input id="inputMetaDespesas" type="text" inputmode="decimal" autocomplete="off" required aria-describedby="goalFormStatus"></div></label>
             </div>
-
-            <div class="metas-v3__comparison-list">
-              <div class="metas-v3__comparison-row">
-                <div class="metas-v3__comparison-label">
-                  <div class="metas-v3__mini-icon metas-v3__mini-icon--blue">📈</div>
-                  <strong>Receita</strong>
-                </div>
-
-                <div class="metas-v3__comparison-bars">
-                  <div class="metas-v3__comparison-track">
-                    <div class="metas-v3__comparison-fill metas-v3__comparison-fill--blue" id="compReceitaAtualBar">
-                    </div>
-                  </div>
-                  <div class="metas-v3__comparison-track metas-v3__comparison-track--secondary">
-                    <div class="metas-v3__comparison-fill metas-v3__comparison-fill--secondary" id="compReceitaMetaBar">
-                    </div>
-                  </div>
-                </div>
-
-                <div class="metas-v3__comparison-values">
-                  <div id="compReceitaAtualValor">R$ 0,00</div>
-                  <div id="compReceitaMetaValor">R$ 0,00</div>
-                </div>
-              </div>
-
-              <div class="metas-v3__comparison-row">
-                <div class="metas-v3__comparison-label">
-                  <div class="metas-v3__mini-icon metas-v3__mini-icon--green">💼</div>
-                  <strong>Investido</strong>
-                </div>
-
-                <div class="metas-v3__comparison-bars">
-                  <div class="metas-v3__comparison-track">
-                    <div class="metas-v3__comparison-fill metas-v3__comparison-fill--green" id="compInvestidoAtualBar">
-                    </div>
-                  </div>
-                  <div class="metas-v3__comparison-track metas-v3__comparison-track--secondary">
-                    <div class="metas-v3__comparison-fill metas-v3__comparison-fill--secondary"
-                      id="compInvestidoMetaBar">
-                    </div>
-                  </div>
-                </div>
-
-                <div class="metas-v3__comparison-values">
-                  <div id="compInvestidoAtualValor">R$ 0,00</div>
-                  <div id="compInvestidoMetaValor">R$ 0,00</div>
-                </div>
-              </div>
-
-              <div class="metas-v3__comparison-row">
-                <div class="metas-v3__comparison-label">
-                  <div class="metas-v3__mini-icon metas-v3__mini-icon--red">📉</div>
-                  <strong>Despesas</strong>
-                </div>
-
-                <div class="metas-v3__comparison-bars">
-                  <div class="metas-v3__comparison-track">
-                    <div class="metas-v3__comparison-fill metas-v3__comparison-fill--red" id="compDespesasAtualBar">
-                    </div>
-                  </div>
-                  <div class="metas-v3__comparison-track metas-v3__comparison-track--secondary">
-                    <div class="metas-v3__comparison-fill metas-v3__comparison-fill--secondary"
-                      id="compDespesasMetaBar">
-                    </div>
-                  </div>
-                </div>
-
-                <div class="metas-v3__comparison-values">
-                  <div id="compDespesasAtualValor">R$ 0,00</div>
-                  <div id="compDespesasMetaValor">R$ 0,00</div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div class="metas-v3__summary-stack">
-            <div class="card metas-v3__summary-card">
-              <div class="metas-v3__summary-icon metas-v3__summary-icon--blue">📈</div>
-              <div class="metas-v3__summary-content">
-                <div class="metas-v3__summary-title" id="sumReceitaTitulo">Receita do mês</div>
-                <div class="metas-v3__summary-value metas-v3__summary-value--blue" id="sumReceitaValor">R$ 0,00</div>
-                <div class="metas-v3__summary-sub" id="sumReceitaSub">0% da meta mensal</div>
-              </div>
-            </div>
-
-            <div class="card metas-v3__summary-card">
-              <div class="metas-v3__summary-icon metas-v3__summary-icon--green">💼</div>
-              <div class="metas-v3__summary-content">
-                <div class="metas-v3__summary-title" id="sumInvestidoTitulo">Total investido</div>
-                <div class="metas-v3__summary-value metas-v3__summary-value--green" id="sumInvestidoValor">R$ 0,00
-                </div>
-                <div class="metas-v3__summary-sub" id="sumInvestidoSub">0% da meta mensal</div>
-              </div>
-            </div>
-
-            <div class="card metas-v3__summary-card">
-              <div class="metas-v3__summary-icon metas-v3__summary-icon--red">📉</div>
-              <div class="metas-v3__summary-content">
-                <div class="metas-v3__summary-title" id="sumDespesasTitulo">Despesas do mês</div>
-                <div class="metas-v3__summary-value metas-v3__summary-value--red" id="sumDespesasValor">R$ 0,00</div>
-                <div class="metas-v3__summary-sub" id="sumDespesasSub">0% da meta mensal</div>
-              </div>
-            </div>
-          </div>
-        </div>
+            <button class="goals-text-button" id="goalUseCurrent" type="button">Usar os valores registrados no mês selecionado</button>
+            <div class="goals-edit-preview" id="goalEditPreview" aria-live="polite"></div>
+            <p id="goalFormStatus" class="goals-form-status" role="status" aria-live="polite"></p>
+            <div class="goals-dialog-actions"><button id="goalCancel" class="goals-secondary" type="button">Cancelar</button><button id="btnSalvarMetasConfig" class="goals-primary" type="submit">Salvar metas</button></div>
+          </form>
+        </dialog>
       </section>
     </div>
   </div>
 
-        <script src="js/utils.js?v=consolidado4"></script>
-        <script src="js/api.js?v=consolidado4"></script>
-        <script src="js/form.js?v=consolidado4"></script>
-        <script src="js/ui.js?v=consolidado4"></script>
-        <script src="js/charts.js?v=consolidado4"></script>
-        <script src="js/metas.js?v=consolidado4"></script>
-        <script src="js/gastos-fixos.js?v=consolidado4"></script>
-        <script src="js/parcelamentos.js?v=consolidado4"></script>
-        <script src="js/main.js?v=consolidado4"></script>
-        <script src="js/auth.js?v=consolidado4"></script>
-        <script src="js/perfil.js?v=consolidado4"></script>
-        <script src="js/conta-ui.js?v=consolidado4"></script>
+        <script src="js/utils.js?v=metas2"></script>
+        <script src="js/api.js?v=metas2"></script>
+        <script src="js/form.js?v=metas2"></script>
+        <script src="js/ui.js?v=metas2"></script>
+        <script src="js/charts.js?v=metas2"></script>
+        <script src="js/metas.js?v=metas2"></script>
+        <script src="js/gastos-fixos.js?v=metas2"></script>
+        <script src="js/preferencias-banco.js?v=metas2"></script>
+        <script src="js/main.js?v=metas2"></script>
+        <script src="js/auth.js?v=metas2"></script>
+        <script src="js/perfil.js?v=metas2"></script>
+        <script src="js/conta-ui.js?v=metas2"></script>
 
-<script src="js/melhorias-senha.js?v=consolidado4"></script>
-<script src="js/dashboards-personalizados.js?v=consolidado4"></script>
+<script src="js/melhorias-senha.js?v=metas2"></script>
+<script src="js/dashboards-personalizados.js?v=metas2"></script>
 </body>
 
 

@@ -19,14 +19,11 @@
  ['top_despesas','Maiores despesas','Dez maiores lançamentos de despesa do período.'],
  ['top_receitas','Maiores receitas','Dez maiores receitas do período.'],
  ['dias_semana','Despesas por dia da semana','Distribuição de despesas pela data do lançamento.'],
- ['parcelas_pagas','Parcelas pagas','Valores das parcelas marcadas como pagas, agrupados pela data da parcela.'],
- ['parcelas_pendentes','Parcelas pendentes','Despesas parceladas ainda pendentes, inclusive futuras, pela data de cada parcela. Não entram nos totais realizados.'],
- ['parcelamento','À vista × parcelado','Comparação entre despesas não parceladas e parcelas pagas.'],
  ['categoria_quantidade','Frequência das categorias','Número de despesas por categoria.'],
  ['acumulado_despesa','Despesas acumuladas','Soma progressiva das despesas no período.'],
  ['acumulado_receita','Receitas acumuladas','Soma progressiva das receitas no período.']
  ].map(([id,titulo,descricao])=>({id,titulo,descricao}));
- const padrao=['resumo','saldo','categoria_despesa','parcelas_pendentes'];
+ const padrao=['resumo','saldo','categoria_despesa','investimentos'];
  let prefs={dashboard:[...padrao],comparativo:[...padrao]},carregado=false,carregando=false,ano=new Date().getFullYear();
  const estados={};const cores=['#16a34a','#dc2626','#f59e0b','#2563eb','#7c3aed','#0891b2'];
  const tipo=i=>obterTipoLancamento(i),valor=i=>obterValorAbsoluto(i);
@@ -100,13 +97,10 @@
   else if(id==='comprometimento'){unidade='percentual';ds('Receita gasta',receitas.map((r,i)=>r?despesas[i]/r*100:null));}
   else if(id.startsWith('top_')){const top=(id==='top_despesas'?desp(a):rec(a)).slice().sort((a,b)=>valor(b)-valor(a)).slice(0,10);labels.splice(0,labels.length,...top.map(i=>String(i.descricao||'Sem descrição')));ds('Valor',top.map(valor));}
   else if(id==='dias_semana'){labels.splice(0,labels.length,...['Dom','Seg','Ter','Qua','Qui','Sex','Sáb']);ds('Despesas',labels.map((_,n)=>soma(desp(a).filter(i=>normalizarDataParaOrdenacao(i.data).getDay()===n))));}
-  else if(id==='parcelamento'){labels.splice(0,labels.length,'À vista','Parcelado');ds('Despesas',[soma(desp(a).filter(i=>!i.parcelado)),soma(desp(a).filter(i=>i.parcelado))]);}
-  else if(id==='parcelas_pagas')ds('Parcelas pagas',grupos.map(x=>soma(desp(x).filter(i=>i.parcelado&&i.parcelaPaga===true))));
-  else if(id==='parcelas_pendentes'){const brutos=typeof lancamentos!=='undefined'?lancamentos:[];const pend=brutos.filter(i=>i.parcelado&&i.parcelaPaga===false&&tipo(i)==='Despesa'&&pertence(i,e)&&!categoriaIgnoradaNoDashboard(i));ds('Parcelas pendentes',labels.map((_,j)=>soma(pend.filter(i=>indice(i)===j))));}
   return {labels,datasets,type,unidade};
  }
  function desenhar(e){if(e.chart){e.chart.destroy();e.chart=null;}const c=catalogo.find(c=>c.id===e.ativo);e.card.hidden=!c;if(!c)return;
-  e.titulo.textContent=c.titulo;e.desc.textContent=c.descricao;e.canvas.setAttribute('aria-label',c.titulo);e.nota.textContent='Período: '+(e.id==='comparativo'?ano:e.mes)+'. Totais e gráficos realizados consideram lançamentos até hoje, sem parcelas pendentes. Resultado = receitas − despesas; saldo inicial e vales ficam fora.';
+  e.titulo.textContent=c.titulo;e.desc.textContent=c.descricao;e.canvas.setAttribute('aria-label',c.titulo);e.nota.textContent='Período: '+(e.id==='comparativo'?ano:e.mes)+'. Totais e gráficos realizados consideram lançamentos até hoje. Resultado = receitas − despesas; saldo inicial e vales ficam fora.';
   const d=dadosGrafico(e);if(!d.datasets.some(s=>s.data.some(x=>x!==null&&x!==0)))e.nota.textContent+=' Sem valores para esta análise.';
   if(typeof Chart==='undefined'){e.nota.textContent+=' Não foi possível carregar o gráfico. Verifique sua conexão.';return;}
   const fmt=x=>d.unidade==='moeda'?formatarMoeda(x):d.unidade==='percentual'?Number(x).toFixed(1)+'%':String(x);

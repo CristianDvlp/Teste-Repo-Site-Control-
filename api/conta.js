@@ -6,6 +6,27 @@ export default async function handler(req,res) {
  try {
   protegerPost(req);
   const {acao}=req.body || {};
+  if (['app-carregar', 'app-salvar', 'app-importar'].includes(acao)) {
+   const u = await sessao(req);
+   if (acao !== 'app-carregar') {
+    const { secao, valor } = req.body;
+    const valido = secao === 'metas'
+      ? valor && valor.mensal && ['receita','investido','despesas'].every(k => typeof valor.mensal[k] === 'number' && Number.isFinite(valor.mensal[k]) && valor.mensal[k] >= 0 && valor.mensal[k] <= 1e12)
+      : secao === 'perfilIndicadores'
+        ? Array.isArray(valor) && valor.length <= 40 && valor.every(k => typeof k === 'string' && /^[a-zA-Z]{1,40}$/.test(k))
+        : secao === 'perfilOculto' && typeof valor === 'boolean';
+    if (!valido) throw falha(400, 'Configuração inválida.');
+    const patch = JSON.stringify({ [secao]: secao === 'metas' ? { mensal: { receita: valor.mensal.receita, investido: valor.mensal.investido, despesas: valor.mensal.despesas } } : valor });
+    if (acao === 'app-importar') {
+     await sql`UPDATE usuarios SET preferencias_app = COALESCE(preferencias_app, '{}'::jsonb) || ${patch}::jsonb
+       WHERE id = ${u.id} AND NOT (COALESCE(preferencias_app, '{}'::jsonb) ? ${secao})`;
+    } else {
+     await sql`UPDATE usuarios SET preferencias_app = COALESCE(preferencias_app, '{}'::jsonb) || ${patch}::jsonb WHERE id = ${u.id}`;
+    }
+   }
+   const [row] = await sql`SELECT preferencias_app FROM usuarios WHERE id = ${u.id}`;
+   return res.status(200).json({ preferencias: row.preferencias_app || {} });
+  }
   if(acao === 'preferencias-carregar' || acao === 'preferencias-salvar') {
    const u=await sessao(req);
    if(acao === 'preferencias-salvar') {

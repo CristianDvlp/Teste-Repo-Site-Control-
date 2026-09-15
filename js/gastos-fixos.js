@@ -137,21 +137,7 @@ function validarMesReferenciaGF(texto) {
     return mes >= 1 && mes <= 12 && ano >= 2020 && ano <= 2100;
 }
 
-function obterRotuloTipoControleGF(item) {
-    return item.tipo_controle === 'parcelado' ? 'Parcelado' : 'Fixo mensal';
-}
 
-function obterRotuloParcelaGF(item) {
-    if (item.tipo_controle !== 'parcelado') return '-';
-
-    if (item.rotulo_parcela) return item.rotulo_parcela;
-
-    if (item.parcela_atual && item.total_parcelas) {
-        return `${item.parcela_atual}/${item.total_parcelas}`;
-    }
-
-    return '-';
-}
 
 function obterDadosFormularioGastoFixo() {
     return {

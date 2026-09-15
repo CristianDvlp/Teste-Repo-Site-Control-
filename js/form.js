@@ -2,11 +2,10 @@
   Pasta: js
   Arquivo: form.js
 
-  Formulário de lançamentos e criação de compras parceladas.
+  Formulário de lançamentos.
 */
 
 const ANO_MINIMO = 2026;
-const MAX_PARCELAS = 60;
 const TIPOS_PAGAMENTO = ['Pix', 'Debito', 'Credito', 'Dinheiro', 'Cartão A', 'Cartão P'];
 const TIPOS_LANCAMENTO = ['Receita', 'Despesa', 'Vales'];
 
@@ -18,12 +17,6 @@ const form = {
   get valor() { return document.getElementById('valor'); },
   get pagamento() { return document.getElementById('pagamento'); },
   get categoriaSugestoes() { return document.getElementById('categoriaSugestoes'); },
-  get parcelado() { return document.getElementById('parcelado'); },
-  get totalParcelas() { return document.getElementById('totalParcelas'); },
-  get modoParcelas() { return document.getElementById('modoParcelas'); },
-  get parcelamentoPainel() { return document.getElementById('parcelamentoPainel'); },
-  get parcelasPreview() { return document.getElementById('parcelasPreview'); },
-  get parcelasResumo() { return document.getElementById('parcelasResumo'); },
   get valorLabelText() { return document.getElementById('valorLabelText'); },
   get dataLabelText() { return document.getElementById('dataLabelText'); },
   get financeForm() { return document.getElementById('financeForm'); }
@@ -103,19 +96,6 @@ function formatarDataBRFormulario(data) {
   return `${dia}/${mes}/${data.getFullYear()}`;
 }
 
-function adicionarMesesMantendoDia(dataBase, quantidadeMeses) {
-  const diaOriginal = dataBase.getDate();
-  const primeiroDiaDestino = new Date(dataBase.getFullYear(), dataBase.getMonth() + quantidadeMeses, 1);
-  const ultimoDiaDestino = new Date(
-    primeiroDiaDestino.getFullYear(),
-    primeiroDiaDestino.getMonth() + 1,
-    0
-  ).getDate();
-
-  primeiroDiaDestino.setDate(Math.min(diaOriginal, ultimoDiaDestino));
-  return primeiroDiaDestino;
-}
-
 function configurarCampoData() {
   if (!form.data || form.data.dataset.configurado) return;
 
@@ -133,7 +113,6 @@ function configurarCampoData() {
       return;
     }
 
-    if (form.parcelado?.checked) renderizarParcelasPreview();
   });
 
   form.data.dataset.configurado = 'true';
@@ -169,175 +148,9 @@ function configurarCampoValor() {
   form.valor.addEventListener('blur', () => {
     const valorNumerico = converterValor(form.valor.value);
     form.valor.value = valorNumerico > 0 ? formatarMoeda(valorNumerico) : '';
-    if (form.parcelado?.checked) renderizarParcelasPreview();
   });
 
   form.valor.dataset.configurado = 'true';
-}
-
-function gerarValoresIguais(valorTotal, quantidade) {
-  const totalCentavos = Math.round(Number(valorTotal) * 100);
-  const base = Math.floor(totalCentavos / quantidade);
-  const resto = totalCentavos - (base * quantidade);
-
-  return Array.from({ length: quantidade }, (_, indice) => (
-    (base + (indice < resto ? 1 : 0)) / 100
-  ));
-}
-
-function obterParcelasAtuaisDoPreview() {
-  if (!form.parcelasPreview) return [];
-
-  return Array.from(form.parcelasPreview.querySelectorAll('.parcela-preview-row')).map((linha, indice) => ({
-    parcelaAtual: indice + 1,
-    data: linha.querySelector('.parcela-data')?.value || '',
-    valor: converterValor(linha.querySelector('.parcela-valor')?.value || 0),
-    paga: !!linha.querySelector('.parcela-paga')?.checked
-  }));
-}
-
-function atualizarResumoParcelasPreview() {
-  if (!form.parcelasResumo) return;
-
-  const valorTotal = converterValor(form.valor?.value || 0);
-  const parcelas = obterParcelasAtuaisDoPreview();
-  const soma = parcelas.reduce((acc, item) => acc + (Number(item.valor) || 0), 0);
-  const pagas = parcelas.filter(item => item.paga).reduce((acc, item) => acc + (Number(item.valor) || 0), 0);
-  const diferenca = Math.round((soma - valorTotal) * 100) / 100;
-  const ok = parcelas.length > 0 && Math.abs(diferenca) <= 0.01;
-
-  form.parcelasResumo.innerHTML = `
-    <div><span>Total da compra</span><strong>${formatarMoeda(valorTotal || 0)}</strong></div>
-    <div><span>Soma das parcelas</span><strong>${formatarMoeda(soma)}</strong></div>
-    <div><span>Já marcado como pago</span><strong>${formatarMoeda(pagas)}</strong></div>
-    <div class="parcelas-diferenca ${ok ? 'ok' : 'erro'}">
-      <span>${ok ? 'Valores conferem' : 'Diferença'}</span>
-      <strong>${ok ? '✓' : formatarMoeda(Math.abs(diferenca))}</strong>
-    </div>
-  `;
-}
-
-function renderizarParcelasPreview() {
-  if (!form.parcelasPreview || !form.parcelado?.checked) return;
-
-  const quantidade = Number(form.totalParcelas?.value || 0);
-  const valorTotal = converterValor(form.valor?.value || 0);
-  const dataInicial = parseDataBR(form.data?.value || '');
-  const modo = form.modoParcelas?.value || 'iguais';
-  const anteriores = obterParcelasAtuaisDoPreview();
-  const dataBaseAlterada = anteriores.length > 0 && String(anteriores[0]?.data || '') !== String(form.data?.value || '');
-
-  if (!Number.isInteger(quantidade) || quantidade < 2 || quantidade > MAX_PARCELAS || !(valorTotal > 0) || !dataInicial) {
-    form.parcelasPreview.innerHTML = `
-      <div class="parcelamento-placeholder">
-        Informe o valor total, o vencimento da 1ª parcela e a quantidade para gerar as parcelas.
-      </div>
-    `;
-    if (form.parcelasResumo) form.parcelasResumo.innerHTML = '';
-    return;
-  }
-
-  const valoresIguais = gerarValoresIguais(valorTotal, quantidade);
-  const linhas = [];
-
-  for (let indice = 0; indice < quantidade; indice += 1) {
-    const anterior = anteriores[indice];
-    const dataPadrao = formatarDataBRFormulario(adicionarMesesMantendoDia(dataInicial, indice));
-    const dataParcela = !dataBaseAlterada && anterior?.data && dataValida(anterior.data) ? anterior.data : dataPadrao;
-    const valorParcela = modo === 'personalizadas' && anterior && anterior.valor > 0
-      ? anterior.valor
-      : valoresIguais[indice];
-    const paga = anterior?.paga || false;
-
-    linhas.push(`
-      <div class="parcela-preview-row" data-parcela="${indice + 1}">
-        <div class="parcela-numero">${indice + 1}/${quantidade}</div>
-        <label>
-          <span>Vencimento</span>
-          <input class="parcela-data" type="text" inputmode="numeric" maxlength="10" value="${dataParcela}" aria-label="Vencimento parcela ${indice + 1}" />
-        </label>
-        <label>
-          <span>Valor</span>
-          <input class="parcela-valor" type="text" inputmode="decimal" value="${formatarMoeda(valorParcela)}" ${modo === 'iguais' ? 'readonly' : ''} aria-label="Valor parcela ${indice + 1}" />
-        </label>
-        <label class="parcela-status-check">
-          <span>Status</span>
-          <span class="parcela-check-wrap">
-            <input class="parcela-paga" type="checkbox" ${paga ? 'checked' : ''} />
-            <span>Pago</span>
-          </span>
-        </label>
-      </div>
-    `);
-  }
-
-  form.parcelasPreview.innerHTML = linhas.join('');
-  atualizarResumoParcelasPreview();
-}
-
-function configurarEventosPreviewParcelas() {
-  if (!form.parcelasPreview || form.parcelasPreview.dataset.configurado) return;
-
-  form.parcelasPreview.addEventListener('input', (event) => {
-    if (event.target.classList.contains('parcela-data')) {
-      event.target.value = aplicarMascaraData(event.target.value);
-    }
-    atualizarResumoParcelasPreview();
-  });
-
-  form.parcelasPreview.addEventListener('blur', (event) => {
-    if (event.target.classList.contains('parcela-valor')) {
-      const valor = converterValor(event.target.value);
-      event.target.value = valor > 0 ? formatarMoeda(valor) : '';
-      atualizarResumoParcelasPreview();
-    }
-  }, true);
-
-  form.parcelasPreview.addEventListener('change', atualizarResumoParcelasPreview);
-  form.parcelasPreview.dataset.configurado = 'true';
-}
-
-function atualizarCamposParcelamento() {
-  const parcelado = !!form.parcelado?.checked;
-
-  if (form.parcelamentoPainel) form.parcelamentoPainel.hidden = !parcelado;
-  if (form.totalParcelas) form.totalParcelas.required = parcelado;
-  if (form.modoParcelas) form.modoParcelas.required = parcelado;
-  if (form.valorLabelText) form.valorLabelText.textContent = parcelado ? 'Valor total da compra' : 'Valor';
-  if (form.dataLabelText) form.dataLabelText.textContent = parcelado ? 'Vencimento da 1ª parcela' : 'Data';
-
-  if (form.tipo) {
-    if (parcelado) form.tipo.value = 'Despesa';
-    form.tipo.disabled = parcelado;
-  }
-
-  const btnAgendar = document.getElementById('btnAgendarLancamento');
-  if (btnAgendar) {
-    btnAgendar.disabled = parcelado;
-    btnAgendar.title = parcelado ? 'Compras parceladas já geram os lançamentos futuros automaticamente.' : '';
-  }
-
-  if (!parcelado) {
-    if (form.totalParcelas) form.totalParcelas.value = '';
-    if (form.modoParcelas) form.modoParcelas.value = 'iguais';
-    if (form.parcelasPreview) form.parcelasPreview.innerHTML = '';
-    if (form.parcelasResumo) form.parcelasResumo.innerHTML = '';
-    return;
-  }
-
-  renderizarParcelasPreview();
-}
-
-function configurarParcelamento() {
-  if (!form.parcelado || form.parcelado.dataset.configurado) return;
-
-  form.parcelado.addEventListener('change', atualizarCamposParcelamento);
-  form.totalParcelas?.addEventListener('input', renderizarParcelasPreview);
-  form.modoParcelas?.addEventListener('change', renderizarParcelasPreview);
-  configurarEventosPreviewParcelas();
-
-  form.parcelado.dataset.configurado = 'true';
-  atualizarCamposParcelamento();
 }
 
 function atualizarSugestoesCategoria(lancamentos = []) {
@@ -359,7 +172,6 @@ function inicializarFormulario(lancamentos = []) {
   configurarCampoData();
   configurarCampoCategoria();
   configurarCampoValor();
-  configurarParcelamento();
   atualizarSugestoesCategoria(lancamentos);
 }
 
@@ -375,8 +187,6 @@ function preencherFormularioParaEdicao(lancamento) {
   form.categoria.value = lancamento.categoria || '';
   form.valor.value = formatarMoeda(obterValorAbsoluto(lancamento));
   form.pagamento.value = normalizarPagamento(lancamento.pagamento || '');
-  if (form.parcelado) form.parcelado.checked = false;
-  atualizarCamposParcelamento();
 }
 
 function normalizarTextoSemAcento(texto) {
@@ -413,23 +223,13 @@ function obterDadosFormulario() {
   const tipo = normalizarTipoLancamento(form.tipo.value);
   const data = String(form.data.value || '').trim();
   const descricao = String(form.descricao.value || '').trim();
-  const parcelado = !!form.parcelado?.checked;
-  const totalParcelas = parcelado ? Number(form.totalParcelas?.value || 0) : null;
-  const modoParcelas = parcelado ? (form.modoParcelas?.value || 'iguais') : null;
-  const parcelas = parcelado ? obterParcelasAtuaisDoPreview() : [];
-
   return {
     data,
     tipo,
     descricao,
     categoria,
     valor: valorNumerico,
-    pagamento,
-    parcelado,
-    valorTotalCompra: parcelado ? valorNumerico : null,
-    totalParcelas,
-    modoParcelas,
-    parcelas
+    pagamento
   };
 }
 
@@ -448,27 +248,6 @@ function validarFormularioAvancado(novo) {
   if (!(novo.valor > 0)) erros.push('Informe um valor maior que zero.');
   if (!TIPOS_PAGAMENTO.includes(novo.pagamento)) erros.push('Tipo de pagamento inválido.');
 
-  if (novo.parcelado) {
-    if (novo.tipo !== 'Despesa') erros.push('Compra parcelada deve ser uma despesa.');
-    if (!Number.isInteger(novo.totalParcelas) || novo.totalParcelas < 2 || novo.totalParcelas > MAX_PARCELAS) {
-      erros.push(`Informe entre 2 e ${MAX_PARCELAS} parcelas.`);
-    }
-
-    if (!Array.isArray(novo.parcelas) || novo.parcelas.length !== novo.totalParcelas) {
-      erros.push('Gere todas as parcelas antes de salvar.');
-    } else {
-      novo.parcelas.forEach((parcela, indice) => {
-        if (!dataValida(parcela.data)) erros.push(`Data inválida na parcela ${indice + 1}.`);
-        if (!(Number(parcela.valor) > 0)) erros.push(`Valor inválido na parcela ${indice + 1}.`);
-      });
-
-      const soma = novo.parcelas.reduce((acc, parcela) => acc + (Number(parcela.valor) || 0), 0);
-      if (Math.abs(soma - novo.valorTotalCompra) > 0.01) {
-        erros.push('A soma das parcelas precisa ser igual ao valor total da compra.');
-      }
-    }
-  }
-
   return [...new Set(erros)];
 }
 
@@ -484,10 +263,4 @@ function limparFormulario() {
   if (form.categoria) form.categoria.value = '';
   if (form.valor) form.valor.value = '';
   if (form.pagamento) form.pagamento.value = '';
-  if (form.parcelado) form.parcelado.checked = false;
-  if (form.totalParcelas) form.totalParcelas.value = '';
-  if (form.modoParcelas) form.modoParcelas.value = 'iguais';
-  if (form.parcelasPreview) form.parcelasPreview.innerHTML = '';
-  if (form.parcelasResumo) form.parcelasResumo.innerHTML = '';
-  atualizarCamposParcelamento();
 }
