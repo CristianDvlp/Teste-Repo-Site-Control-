@@ -40,7 +40,7 @@ function abrirEditorPerfil() {
   const opcoes = document.getElementById('perfilOpcoes');
   opcoes.replaceChildren();
   const grupos = new Map();
-  perfilCatalogo.forEach(([id, titulo, descricao, grupo]) => {
+  perfilCatalogo.filter(item => item[0] !== 'vales' || valesAtivos()).forEach(([id, titulo, descricao, grupo]) => {
     if (!grupos.has(grupo)) {
       const fieldset = document.createElement('fieldset');
       const legend = document.createElement('legend');
@@ -185,11 +185,11 @@ function renderResumoPerfil() {
     return;
   }
   const periodo = document.getElementById('perfilPeriodo').value;
-  const resumo = calcularResumoPerfil(perfilDados, periodo);
+  const resumo = calcularResumoPerfil(perfilDados.filter(lancamentoVisivel), periodo);
   const moeda = valor => perfilOculto ? 'R$ •••••' : formatarMoeda(valor);
   status.textContent = perfilSelecionados.length ? 'Período selecionado até hoje. O indicador de histórico considera todos os registros até hoje.' : 'Seu resumo está vazio. Clique em Personalizar resumo para escolher as informações.';
   const card = (id, titulo, valor, detalhe = '') => {
-    if (!perfilSelecionados.includes(id)) return;
+    if (!perfilSelecionados.includes(id) || (id === 'vales' && !valesAtivos())) return;
     const caixa = document.createElement('div');
     caixa.className = 'perfil-card';
     [['span', titulo], ['strong', valor], ['small', detalhe]].forEach(([tag, texto]) => {

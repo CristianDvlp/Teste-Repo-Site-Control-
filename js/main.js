@@ -287,7 +287,7 @@ function renderListaAgendamentos() {
   const container = document.getElementById('listaAgendamentos');
   if (!container) return;
 
-  const lista = agendamentosBanco;
+  const lista = agendamentosBanco.filter(lancamentoVisivel);
 
   if (!lista.length) {
     container.innerHTML = `<div class="agendamento-vazio">Nenhum lançamento agendado.</div>`;
@@ -414,6 +414,7 @@ async function carregarDados() {
     setStatus('Carregando dados...');
     window.dispatchEvent(new CustomEvent('perfil:dados', { detail: { estado: 'carregando' } }));
     lancamentos = await carregarDadosAPI();
+    aplicarRecursosUsuario();
     window.dispatchEvent(new CustomEvent('perfil:dados', { detail: { estado: 'pronto', dados: lancamentos } }));
     revisaoDados += 1;
     chaveDashboardRenderizada = '';
@@ -521,7 +522,8 @@ async function ativarTab(tabId) {
   }
 
   if (tabId === 'gastosFixos' && typeof carregarGastosFixos === 'function') {
-    await carregarGastosFixos();
+    renderCartoes();
+    if (document.getElementById('contasAnteriores').open) await carregarGastosFixos();
   }
 }
 
@@ -663,7 +665,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     return;
   }
 
-  try { await carregarPreferenciasBanco(); }
+  try { await carregarPreferenciasBanco(); aplicarRecursosUsuario(); }
   catch (e) { alert('Não foi possível carregar metas e preferências. Confira a migração SQL e recarregue a página. ' + e.message); }
 
   if (typeof inicializarFormulario === 'function') {

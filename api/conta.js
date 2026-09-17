@@ -1,6 +1,19 @@
 import bcrypt from 'bcryptjs';
 import {sql,protegerPost,emailValido,senhaValida,limitarIP,limitar,exigirEmailConfigurado,enviarLink,responderErro,falha,sessao,conferirSenha,hashToken} from '../lib/conta.js';
 
+function validarCartoes(valor) {
+ if (!Array.isArray(valor) || valor.length > 50) return false;
+ const ids = new Set(), formas = new Set();
+ return valor.every(c => {
+  if (!c || typeof c.id !== 'string' || !/^[a-zA-Z0-9-]{1,60}$/.test(c.id) || ids.has(c.id)) return false;
+  if (![c.nome,c.pagamento].every(v=>typeof v==='string' && v.trim().length>0 && v.length<=80) || formas.has(c.pagamento)) return false;
+  if (!Number.isInteger(c.vencimento) || c.vencimento<1 || c.vencimento>31) return false;
+  if (!c.quitacoes || typeof c.quitacoes !== 'object' || Array.isArray(c.quitacoes) || Object.keys(c.quitacoes).length>1200) return false;
+  if (!Object.entries(c.quitacoes).every(([mes,q])=>/^(0[1-9]|1[0-2])\/\d{4}$/.test(mes) && q && typeof q.assinatura==='string' && q.assinatura.length<=100000 && typeof q.data==='string' && /^\d{2}\/\d{2}\/\d{4}$/.test(q.data))) return false;
+  ids.add(c.id);formas.add(c.pagamento);return true;
+ });
+}
+
 export default async function handler(req,res) {
  res.setHeader('Cache-Control','no-store');
  try {
@@ -14,7 +27,7 @@ export default async function handler(req,res) {
       ? valor && valor.mensal && ['receita','investido','despesas'].every(k => typeof valor.mensal[k] === 'number' && Number.isFinite(valor.mensal[k]) && valor.mensal[k] >= 0 && valor.mensal[k] <= 1e12)
       : secao === 'perfilIndicadores'
         ? Array.isArray(valor) && valor.length <= 40 && valor.every(k => typeof k === 'string' && /^[a-zA-Z]{1,40}$/.test(k))
-        : secao === 'perfilOculto' && typeof valor === 'boolean';
+        : secao === 'cartoes' ? validarCartoes(valor) : ['perfilOculto', 'valesAtivos'].includes(secao) && typeof valor === 'boolean';
     if (!valido) throw falha(400, 'Configuração inválida.');
     const patch = JSON.stringify({ [secao]: secao === 'metas' ? { mensal: { receita: valor.mensal.receita, investido: valor.mensal.investido, despesas: valor.mensal.despesas } } : valor });
     if (acao === 'app-importar') {
@@ -24,6 +37,10 @@ export default async function handler(req,res) {
      await sql`UPDATE usuarios SET preferencias_app = COALESCE(preferencias_app, '{}'::jsonb) || ${patch}::jsonb WHERE id = ${u.id}`;
     }
    }
+   await sql`UPDATE usuarios SET preferencias_app = COALESCE(preferencias_app, '{}'::jsonb) || jsonb_build_object('valesAtivos',
+     EXISTS (SELECT 1 FROM lancamentos WHERE usuario_id = ${u.id} AND lower(trim(tipo)) IN ('vale','vales'))
+     OR EXISTS (SELECT 1 FROM agendamentos WHERE usuario_id = ${u.id} AND lower(trim(tipo)) IN ('vale','vales')))
+     WHERE id = ${u.id} AND NOT (COALESCE(preferencias_app, '{}'::jsonb) ? 'valesAtivos')`;
    const [row] = await sql`SELECT preferencias_app FROM usuarios WHERE id = ${u.id}`;
    return res.status(200).json({ preferencias: row.preferencias_app || {} });
   }

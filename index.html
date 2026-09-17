@@ -5,11 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Teste - Controle Financeiro</title>
 
-    <link rel="stylesheet" href="css/style.css?v=metas2" />
-    <link rel="stylesheet" href="css/perfil.css?v=metas2" />
-    <link rel="stylesheet" href="css/conta.css?v=metas2" />
+    <link rel="stylesheet" href="css/style.css?v=cartoes1" />
+    <link rel="stylesheet" href="css/perfil.css?v=cartoes1" />
+    <link rel="stylesheet" href="css/conta.css?v=cartoes1" />
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <link rel="stylesheet" href="css/metas.css?v=metas3" />
+    <link rel="stylesheet" href="css/metas.css?v=cartoes1" />
     <link rel="icon" type="image/png" href="./favicon.png" />
   </head>
 
@@ -38,7 +38,7 @@
           data-tab-target="gastosFixos"
         >
           <span class="sidebar-icon">💳</span>
-          <span class="sidebar-text">Gastos fixos</span>
+          <span class="sidebar-text">Cartões</span>
         </button>
 
         <button class="sidebar-link" type="button" data-tab-target="dashboard">
@@ -163,6 +163,11 @@
             ×
           </button>
         </div>
+        <div class="perfil-recurso">
+          <label for="perfilVales"><strong>Vales</strong><span><input id="perfilVales" type="checkbox" role="switch" disabled> Ativar vales</span></label>
+          <p>Exibir recursos de vales no sistema. Desativar preserva seus registros.</p>
+          <p id="perfilValesStatus" role="status"></p>
+        </div>
         <div class="perfil-filtros">
           <label for="perfilPeriodo"
             >Período
@@ -224,7 +229,7 @@
         ></p>
         <div id="perfilIndicadores" class="perfil-grid"></div>
         <p id="perfilComparacao" class="perfil-comparacao"></p>
-        <p class="perfil-nota">
+        <p class="perfil-nota" data-texto-sem-vales="Valores consideram os lançamentos até hoje. Saldo inicial não compõe os ganhos.">
           Valores consideram os lançamentos até hoje. Vales aparecem separados e
           não entram no resultado. Contas fixas ainda não lançadas não entram
           neste resumo.
@@ -292,7 +297,7 @@
             Lançamentos
           </button>
           <button class="tab-btn" data-tab="gastosFixos" type="button">
-            Gastos fixos
+            Cartões
           </button>
           <button class="tab-btn" data-tab="dashboard" type="button">
             Dashboard do mês
@@ -317,7 +322,7 @@
                 <strong
                   >Data, Tipo, Descrição, Categoria, Valor e Tipo de
                   Pagamento</strong
-                >. Registre suas receitas, despesas e vales de forma simples.
+                >. <span data-texto-vales="Registre suas receitas, despesas e vales de forma simples." data-texto-sem-vales="Registre suas receitas e despesas de forma simples.">Registre suas receitas e despesas de forma simples.</span>
               </div>
 
               <form id="financeForm" class="form-grid">
@@ -339,7 +344,7 @@
                   <select id="tipo" name="tipo" required>
                     <option value="Receita">Receita</option>
                     <option value="Despesa">Despesa</option>
-                    <option value="Vales">Vales</option>
+                    <option data-recurso-vales value="Vales">Vales</option>
                   </select>
                 </label>
 
@@ -516,7 +521,7 @@
                   <option value="Todos">Todos</option>
                   <option value="Receita">Receita</option>
                   <option value="Despesa">Despesa</option>
-                  <option value="Vales">Vales</option>
+                  <option data-recurso-vales value="Vales">Vales</option>
                 </select>
               </label>
             </div>
@@ -541,6 +546,9 @@
         </section>
 
         <section id="gastosFixos" class="tab-content">
+          <div id="cartoesPainel"></div>
+          <details id="contasAnteriores" class="contas-anteriores"><summary>Contas anteriores e recorrências</summary>
+          <p>Seus cadastros e pagamentos anteriores foram preservados. Contas como internet e aluguel continuam disponíveis aqui. Pagar uma conta nesta seção gera uma despesa; não pague aqui uma fatura cujas compras já foram lançadas.</p>
           <div class="card card-destaque">
             <h2 id="tituloFormularioGastoFixo">Novo gasto fixo</h2>
 
@@ -682,6 +690,7 @@
                     <th>Categoria</th>
                     <th class="col-valor">Valor previsto</th>
                     <th>Pagamento</th>
+                    <th>Situação</th>
                     <th>Pago em</th>
                     <th>Ações</th>
                   </tr>
@@ -690,6 +699,7 @@
               </table>
             </div>
           </div>
+        </details>
         </section>
 
         <section id="dashboard" class="tab-content">
@@ -717,7 +727,7 @@
               <div class="value expense" id="totalDespesas">R$ 0,00</div>
             </div>
 
-            <div class="card">
+            <div class="card" data-recurso-vales>
               <strong>Vales</strong>
               <div class="value Vales" id="resumoVales">R$ 0,00</div>
             </div>
@@ -789,7 +799,7 @@
               </div>
             </div>
 
-            <div class="card">
+            <div class="card" data-recurso-vales>
               <strong>Total anual de Vales</strong>
               <div class="value Vales" id="comparativoValesTotal">R$ 0,00</div>
             </div>
@@ -939,7 +949,7 @@
           <p class="goals-footnote">
             Valores registrados até hoje. Investimentos consideram despesas na
             categoria “Investimento” e ficam separados do limite de despesas.
-            Vales e saldo inicial não entram nas receitas das metas.
+            <span data-texto-vales="Vales e saldo inicial não entram nas receitas das metas." data-texto-sem-vales="Saldo inicial não entra nas receitas das metas.">Saldo inicial não entra nas receitas das metas.</span>
           </p>
           <dialog
             id="goalEditor"
@@ -1042,20 +1052,22 @@
       </div>
     </div>
 
-    <script src="js/utils.js?v=metas2"></script>
-    <script src="js/api.js?v=metas2"></script>
-    <script src="js/form.js?v=metas2"></script>
-    <script src="js/ui.js?v=metas2"></script>
-    <script src="js/charts.js?v=metas2"></script>
-    <script src="js/metas.js?v=metas3"></script>
-    <script src="js/gastos-fixos.js?v=metas2"></script>
-    <script src="js/preferencias-banco.js?v=metas2"></script>
-    <script src="js/main.js?v=metas2"></script>
-    <script src="js/auth.js?v=metas2"></script>
-    <script src="js/perfil.js?v=metas2"></script>
-    <script src="js/conta-ui.js?v=metas2"></script>
+    <script src="js/utils.js?v=cartoes1"></script>
+    <script src="js/api.js?v=cartoes1"></script>
+    <script src="js/form.js?v=cartoes1"></script>
+    <script src="js/ui.js?v=cartoes1"></script>
+    <script src="js/charts.js?v=cartoes1"></script>
+    <script src="js/metas.js?v=cartoes1"></script>
+    <script src="js/gastos-fixos.js?v=cartoes1"></script>
+    <script src="js/preferencias-banco.js?v=cartoes1"></script>
+    <script src="js/recursos.js?v=cartoes1"></script>
+    <script src="js/cartoes.js?v=cartoes1"></script>
+    <script src="js/main.js?v=cartoes1"></script>
+    <script src="js/auth.js?v=cartoes1"></script>
+    <script src="js/perfil.js?v=cartoes1"></script>
+    <script src="js/conta-ui.js?v=cartoes1"></script>
 
-    <script src="js/melhorias-senha.js?v=metas2"></script>
-    <script src="js/dashboards-personalizados.js?v=metas2"></script>
+    <script src="js/melhorias-senha.js?v=cartoes1"></script>
+    <script src="js/dashboards-personalizados.js?v=cartoes1"></script>
   </body>
 </html>

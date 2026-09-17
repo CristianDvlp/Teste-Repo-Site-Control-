@@ -172,7 +172,8 @@ function inicializarFormulario(lancamentos = []) {
   configurarCampoData();
   configurarCampoCategoria();
   configurarCampoValor();
-  atualizarSugestoesCategoria(lancamentos);
+  atualizarSugestoesCategoria(lancamentos.filter(lancamentoVisivel));
+  atualizarPagamentosCartoes();
 }
 
 function preencherFormularioParaEdicao(lancamento) {
@@ -243,10 +244,10 @@ function validarFormularioAvancado(novo) {
   if (!novo.data || !dataValida(novo.data)) {
     erros.push(`Data inválida. Use dd/mm/aaaa com ano a partir de ${ANO_MINIMO}.`);
   }
-  if (!novo.tipo || !TIPOS_LANCAMENTO.includes(novo.tipo)) erros.push('Tipo de lançamento inválido.');
+  if (!novo.tipo || !TIPOS_LANCAMENTO.includes(novo.tipo) || (!valesAtivos() && novo.tipo === 'Vales')) erros.push('Tipo de lançamento inválido.');
   if (!novo.categoria || !categoriaValida(novo.categoria)) erros.push('Categoria obrigatória e somente com letras.');
   if (!(novo.valor > 0)) erros.push('Informe um valor maior que zero.');
-  if (!TIPOS_PAGAMENTO.includes(novo.pagamento)) erros.push('Tipo de pagamento inválido.');
+  if (![...TIPOS_PAGAMENTO, ...obterCartoes().map(c => c.pagamento)].includes(novo.pagamento)) erros.push('Tipo de pagamento inválido.');
 
   return [...new Set(erros)];
 }

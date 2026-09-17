@@ -56,3 +56,17 @@
   .perfil-cabecalho h2 { font-size: 21px; }
 }
 @media (max-width: 420px) { .perfil-grid { grid-template-columns: 1fr; } }
+
+[hidden] { display: none !important; }
+.perfil-recurso { padding: 16px; margin: 12px 0 20px; background: #f1f5f9; border-radius: 12px; color: #1e293b; }
+.perfil-recurso label { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+.perfil-recurso input { width: 20px; height: 20px; accent-color: #2563eb; vertical-align: middle; }
+.perfil-recurso p { font-size: 13px; margin: 8px 0 0; }
+.contas-anteriores { margin-top: 24px; padding: 18px; background: #fff; border-radius: 16px; }
+.contas-anteriores > summary { cursor: pointer; font-weight: 700; padding: 8px 0; }
+.cartoes-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)); gap: 18px; margin-top: 20px; }
+.cartao-fatura { border-top: 5px solid #2563eb; }
+.cartao-fatura h3 { margin: 0 0 12px; }
+.cartao-fatura .value { font-size: 28px; font-weight: 700; color: #2563eb; margin: 15px 0; }
+.cartao-fatura p { color: #475569; font-size: 14px; }
+.cartao-fatura ul { padding-left: 20px; max-height: 240px; overflow-y: auto; }

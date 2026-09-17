@@ -98,7 +98,7 @@ const okOrigem =
   (origemSelecionada === 'manual' && origensManuais.includes(origemItem)) ||
   (origemSelecionada === 'gasto_fixo' && origemItem === 'gasto_fixo');
 
-    return okTipo && okCategoria && okOrigem;
+    return lancamentoVisivel(item) && okTipo && okCategoria && okOrigem;
   });
 }
 
@@ -107,7 +107,7 @@ function renderTabela(lancamentos) {
     ? filtrarLancamentosPorMes(lancamentos, mesLancamentosSelecionado)
     : [...lancamentos];
 
-  atualizarFiltroCategorias(dadosBase);
+  atualizarFiltroCategorias(dadosBase.filter(lancamentoVisivel));
 
   const dados = obterLancamentosFiltrados(lancamentos);
   financeTableBody.innerHTML = '';

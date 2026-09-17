@@ -23,6 +23,8 @@
  ['acumulado_despesa','Despesas acumuladas','Soma progressiva das despesas no período.'],
  ['acumulado_receita','Receitas acumuladas','Soma progressiva das receitas no período.']
  ].map(([id,titulo,descricao])=>({id,titulo,descricao}));
+ const disponivel=c=>valesAtivos() || !['vales','categoria_vale'].includes(c.id);
+ const descricao=c=>!valesAtivos() && c.id==='resumo'?'Entradas e despesas por período.':!valesAtivos() && c.id==='saldo'?'Receitas menos despesas, sem saldo inicial.':c.descricao;
  const padrao=['resumo','saldo','categoria_despesa','investimentos'];
  let prefs={dashboard:[...padrao],comparativo:[...padrao]},carregado=false,carregando=false,ano=new Date().getFullYear();
  const estados={};const cores=['#16a34a','#dc2626','#f59e0b','#2563eb','#7c3aed','#0891b2'];
@@ -58,9 +60,10 @@
   e.lista=lista;
   const totais=[soma(rec(lista)),soma(desp(lista)),soma(lista.filter(i=>tipo(i)==='Vales')),soma(rec(lista))-soma(desp(lista))];
   const ids=e.id==='comparativo'?['comparativoReceitasTotal','comparativoDespesasTotal','comparativoValesTotal','comparativoSaldoTotal']:['totalReceitas','totalDespesas','resumoVales','saldoFinal'];ids.forEach((id,n)=>document.getElementById(id).textContent=formatarMoeda(totais[n]));
-  if(!prefs[e.id].includes(e.ativo))e.ativo=prefs[e.id][0];
-  e.opcoes.replaceChildren();for(const c of catalogo.filter(c=>prefs[e.id].includes(c.id))){const b=button('',()=>{e.ativo=c.id;montar(e);});b.className='opcao-dashboard';b.setAttribute('aria-pressed',String(e.ativo===c.id));const t=document.createElement('strong'),d=document.createElement('span');t.textContent=c.titulo;d.textContent=c.descricao;b.append(t,d);e.opcoes.append(b);}
-  if(!prefs[e.id].length)e.opcoes.textContent='Nenhum dashboard selecionado. Use Personalizar dashboards para escolher.';
+  const visiveis=prefs[e.id].filter(id=>catalogo.some(c=>c.id===id&&disponivel(c)));
+  if(!visiveis.includes(e.ativo))e.ativo=visiveis[0];
+  e.opcoes.replaceChildren();for(const c of catalogo.filter(c=>disponivel(c)&&prefs[e.id].includes(c.id))){const b=button('',()=>{e.ativo=c.id;montar(e);});b.className='opcao-dashboard';b.setAttribute('aria-pressed',String(e.ativo===c.id));const t=document.createElement('strong'),d=document.createElement('span');t.textContent=c.titulo;d.textContent=descricao(c);b.append(t,d);e.opcoes.append(b);}
+  if(!visiveis.length)e.opcoes.textContent='Nenhum dashboard selecionado. Use Personalizar dashboards para escolher.';
   desenhar(e);
  }
  function personalizar(e){
@@ -69,14 +72,14 @@
   const texto=document.createElement('p');texto.textContent='A seleção aparece na tela imediatamente. Salve para usar também em outros aparelhos.';dialog.append(texto);
   const antes=[...prefs[e.id]],checks=[];let salvo=false;
   const toolbar=document.createElement('div');toolbar.className='painel-ano';
-  function marcar(ids){prefs[e.id]=[...ids];checks.forEach(x=>x.checked=ids.includes(x.value));montar(e);}
-  toolbar.append(button('Marcar todos',()=>marcar(catalogo.map(c=>c.id))),button('Limpar',()=>marcar([])),button('Restaurar padrão',()=>marcar(padrao)));dialog.append(toolbar);
+  function marcar(ids){prefs[e.id]=[...ids,...antes.filter(id=>catalogo.some(c=>c.id===id&&!disponivel(c)))];checks.forEach(x=>x.checked=ids.includes(x.value));montar(e);}
+  toolbar.append(button('Marcar todos',()=>marcar(catalogo.filter(disponivel).map(c=>c.id))),button('Limpar',()=>marcar([])),button('Restaurar padrão',()=>marcar(padrao)));dialog.append(toolbar);
   const lista=document.createElement('div');lista.className='catalogo-lista';
-  catalogo.forEach(c=>{const label=document.createElement('label'),input=document.createElement('input'),text=document.createElement('span'),t=document.createElement('strong'),d=document.createElement('small');input.type='checkbox';input.value=c.id;input.checked=prefs[e.id].includes(c.id);checks.push(input);input.onchange=()=>{prefs[e.id]=checks.filter(x=>x.checked).map(x=>x.value);montar(e);};t.textContent=c.titulo;d.textContent=c.descricao;text.append(t,d);label.append(input,text);lista.append(label);});dialog.append(lista);
+  catalogo.filter(disponivel).forEach(c=>{const label=document.createElement('label'),input=document.createElement('input'),text=document.createElement('span'),t=document.createElement('strong'),d=document.createElement('small');input.type='checkbox';input.value=c.id;input.checked=prefs[e.id].includes(c.id);checks.push(input);input.onchange=()=>{prefs[e.id]=[...checks.filter(x=>x.checked).map(x=>x.value),...antes.filter(id=>catalogo.some(c=>c.id===id&&!disponivel(c)))];montar(e);};t.textContent=c.titulo;d.textContent=descricao(c);text.append(t,d);label.append(input,text);lista.append(label);});dialog.append(lista);
   const status=document.createElement('p');status.className='senha-campo-erro';status.setAttribute('role','status');const actions=document.createElement('div');actions.className='painel-ano';const save=button('Salvar seleção',async()=>{save.disabled=true;close.disabled=true;cancel.disabled=true;try{await api('preferencias-salvar',prefs);salvo=true;carregado=true;dialog.close();}catch(err){status.textContent=err.message;}finally{save.disabled=false;close.disabled=false;cancel.disabled=false;}}),cancel=button('Cancelar',()=>dialog.close());actions.append(cancel,save);dialog.append(status,actions);dialog.addEventListener('cancel',event=>{if(save.disabled)event.preventDefault();});dialog.addEventListener('close',()=>{if(!salvo){prefs[e.id]=antes;montar(e);}dialog.remove();});document.body.append(dialog);dialog.showModal();
  }
  function dadosGrafico(e){
-  const a=e.lista,id=e.ativo;const anual=e.id==='comparativo';
+  const a=e.lista.filter(lancamentoVisivel),id=e.ativo;const anual=e.id==='comparativo';
   const n=anual?12:new Date(Number(e.mes.split('/')[1]),Number(e.mes.split('/')[0]),0).getDate();
   const labels=Array.from({length:n||31},(_,i)=>anual?['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'][i]:String(i+1));
   const indice=i=>{const d=normalizarDataParaOrdenacao(i.data);return anual?d.getMonth():d.getDate()-1;};
@@ -86,7 +89,7 @@
   const acum=arr=>{let s=0;return arr.map(x=>s+=x);};
   const receitas=grupos.map(x=>soma(rec(x))),despesas=grupos.map(x=>soma(desp(x)));
   const grupo=(items,field,count=false)=>{const m={};items.forEach(i=>{const k=String(i[field]||'Não informado');m[k]=(m[k]||0)+(count?1:valor(i));});const entries=Object.entries(m).sort((a,b)=>b[1]-a[1]);labels.splice(0,labels.length,...entries.map(x=>x[0]));ds('Total',entries.map(x=>x[1]));};
-  if(id==='resumo'){ds('Receitas',receitas);ds('Despesas',despesas);ds('Vales',grupos.map(x=>soma(x.filter(i=>tipo(i)==='Vales'))));}
+  if(id==='resumo'){ds('Receitas',receitas);ds('Despesas',despesas);if(valesAtivos())ds('Vales',grupos.map(x=>soma(x.filter(i=>tipo(i)==='Vales'))));}
   else if(id==='saldo'||id==='acumulado'){const v=receitas.map((x,i)=>x-despesas[i]);ds('Resultado',id==='acumulado'?acum(v):v,'#2563eb');type='line';}
   else if(['receitas','despesas','acumulado_receita','acumulado_despesa'].includes(id)){let v=id.includes('receita')?receitas:despesas;if(id.startsWith('acumulado'))v=acum(v);ds('Total',v);type='line';}
   else if(id==='vales')ds('Vales',grupos.map(x=>soma(x.filter(i=>tipo(i)==='Vales'))));
@@ -100,7 +103,7 @@
   return {labels,datasets,type,unidade};
  }
  function desenhar(e){if(e.chart){e.chart.destroy();e.chart=null;}const c=catalogo.find(c=>c.id===e.ativo);e.card.hidden=!c;if(!c)return;
-  e.titulo.textContent=c.titulo;e.desc.textContent=c.descricao;e.canvas.setAttribute('aria-label',c.titulo);e.nota.textContent='Período: '+(e.id==='comparativo'?ano:e.mes)+'. Totais e gráficos realizados consideram lançamentos até hoje. Resultado = receitas − despesas; saldo inicial e vales ficam fora.';
+  e.titulo.textContent=c.titulo;e.desc.textContent=descricao(c);e.canvas.setAttribute('aria-label',c.titulo);e.nota.textContent='Período: '+(e.id==='comparativo'?ano:e.mes)+'. Totais e gráficos realizados consideram lançamentos até hoje. Resultado = receitas − despesas; '+(valesAtivos()?'saldo inicial e vales ficam fora.':'saldo inicial fica fora.');
   const d=dadosGrafico(e);if(!d.datasets.some(s=>s.data.some(x=>x!==null&&x!==0)))e.nota.textContent+=' Sem valores para esta análise.';
   if(typeof Chart==='undefined'){e.nota.textContent+=' Não foi possível carregar o gráfico. Verifique sua conexão.';return;}
   const fmt=x=>d.unidade==='moeda'?formatarMoeda(x):d.unidade==='percentual'?Number(x).toFixed(1)+'%':String(x);
@@ -108,6 +111,7 @@
  }
  window.renderChartsMes=function(dados,mes){const e=construir('dashboard');e.dados=dados;e.mes=mes;montar(e);carregar();};
  window.renderChartsComparativo=function(dados){const e=construir('comparativo');e.dados=dados;montar(e);carregar();};
+ window.addEventListener('recursos:alterados',()=>Object.values(estados).forEach(montar));
  // Exporta apenas cálculo puro para testes locais.
  window.catalogoDashboardCalcular=dadosGrafico;
 })();
