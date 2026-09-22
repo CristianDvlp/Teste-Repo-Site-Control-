@@ -3,7 +3,7 @@
  const nomes={nova:'Nova',em_analise:'Em análise',planejada:'Planejada',concluida:'Concluída',nao_prevista:'Não prevista'};
  const tipos={melhoria:'Melhoria',recurso:'Novo recurso',problema:'Problema'};
  const impactos={baixo:'Baixo',medio:'Médio',alto:'Alto'};
- let aba='enviar',pagina=0,versao=0,enviando=false,tentativa=null,origemFoco=$('abrirSugestoes');
+ let aba='enviar',pagina=0,versao=0,enviando=false,tentativa=null,origemFoco=$('abrirSugestoesTopo');
  const el=(tag,texto,classe)=>{const e=document.createElement(tag);if(texto)e.textContent=texto;if(classe)e.className=classe;return e;};
  const mensagem=(texto,erro=false)=>{$('sugestoesStatus').textContent=texto;$('sugestoesStatus').classList.toggle('sugestoes-erro',erro);};
  async function api(acao,dados={}) {
@@ -28,7 +28,6 @@
   $('sugestoesAbaAdmin').hidden=!window.contaAtual.admin;
   if(!dialog.open)dialog.showModal();trocarAba('enviar');
  }
- $('abrirSugestoes').addEventListener('click',abrir);
  $('abrirSugestoesTopo').addEventListener('click',abrir);
  $('fecharSugestoes').addEventListener('click',()=>dialog.close());
  dialog.addEventListener('cancel',e=>{if(enviando)e.preventDefault();});

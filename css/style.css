@@ -69,8 +69,7 @@ body {
   gap: 10px;
 }
 
-.sidebar-link,
-.sugestoes-acesso {
+.sidebar-link {
   width: 100%;
   border: none;
   background: transparent;
