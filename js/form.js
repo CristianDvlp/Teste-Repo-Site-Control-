@@ -39,6 +39,15 @@ function formatarCategoriaVisual(texto) {
     .replace(/\b\p{L}/gu, letra => letra.toUpperCase());
 }
 
+function opcoesPagamentoExistentes() {
+  return [...new Set([...TIPOS_PAGAMENTO,
+    ...(typeof lancamentos !== 'undefined' ? lancamentos.map(i=>normalizarPagamento(i.pagamento)) : [])].filter(Boolean))];
+}
+function completarOpcoesPagamento(campo) {
+  for (const nome of opcoesPagamentoExistentes()) {
+    if (![...campo.options].some(o=>o.value===nome)) campo.add(new Option(nome,nome));
+  }
+}
 function criarOuAjustarCampoPagamento() {
   const campoAtual = form.pagamento;
   if (!campoAtual) return;
@@ -55,6 +64,7 @@ function criarOuAjustarCampoPagamento() {
 
   if (campoAtual.tagName === 'SELECT') {
     campoAtual.innerHTML = opcoes;
+    completarOpcoesPagamento(campoAtual);
     return;
   }
 
@@ -63,6 +73,7 @@ function criarOuAjustarCampoPagamento() {
   select.required = true;
   select.innerHTML = opcoes;
   campoAtual.replaceWith(select);
+  completarOpcoesPagamento(select);
 }
 
 function aplicarMascaraData(texto) {
@@ -173,8 +184,6 @@ function inicializarFormulario(lancamentos = []) {
   configurarCampoCategoria();
   configurarCampoValor();
   atualizarSugestoesCategoria(lancamentos.filter(lancamentoVisivel));
-  atualizarPagamentosCartoes();
-  inicializarLancamentoGuiado();
 }
 
 function preencherFormularioParaEdicao(lancamento) {
@@ -184,12 +193,15 @@ function preencherFormularioParaEdicao(lancamento) {
 
   form.data.value = formatarDataParaTela(lancamento.data);
   form.tipo.disabled = false;
+  form.pagamento.disabled = false;
   form.tipo.value = tipoNormalizado;
   form.descricao.value = lancamento.descricao || '';
   form.categoria.value = lancamento.categoria || '';
   form.valor.value = formatarMoeda(obterValorAbsoluto(lancamento));
-  form.pagamento.value = normalizarPagamento(lancamento.pagamento || '');
-  prepararEdicaoGuiada(lancamento);
+  const pagamento = normalizarPagamento(lancamento.pagamento || '');
+  if (pagamento && ![...form.pagamento.options].some(o=>o.value===pagamento)) form.pagamento.add(new Option(pagamento,pagamento));
+  form.pagamento.value = pagamento;
+  if (lancamento.cartao || lancamento.origem === 'cartao') { form.tipo.disabled=true; form.pagamento.disabled=true; }
 }
 
 function normalizarTextoSemAcento(texto) {
@@ -249,7 +261,7 @@ function validarFormularioAvancado(novo) {
   if (!novo.tipo || !TIPOS_LANCAMENTO.includes(novo.tipo) || (!valesAtivos() && novo.tipo === 'Vales')) erros.push('Tipo de lançamento inválido.');
   if (!novo.categoria || !categoriaValida(novo.categoria)) erros.push('Categoria obrigatória e somente com letras.');
   if (!(novo.valor > 0)) erros.push('Informe um valor maior que zero.');
-  if (![...TIPOS_PAGAMENTO, ...obterCartoes().map(c => c.pagamento)].includes(novo.pagamento)) erros.push('Tipo de pagamento inválido.');
+  if (!opcoesPagamentoExistentes().includes(novo.pagamento)) erros.push('Tipo de pagamento inválido.');
 
   return [...new Set(erros)];
 }
@@ -260,11 +272,10 @@ function limparFormulario() {
   if (form.data) form.data.value = '';
   if (form.tipo) {
     form.tipo.disabled = false;
-    form.tipo.value = '';
+    form.tipo.value = 'Receita';
   }
   if (form.descricao) form.descricao.value = '';
   if (form.categoria) form.categoria.value = '';
   if (form.valor) form.valor.value = '';
-  if (form.pagamento) form.pagamento.value = '';
-  resetarFluxoGuiado();
+  if (form.pagamento) { form.pagamento.value = ''; form.pagamento.disabled = false; }
 }

@@ -96,7 +96,6 @@ function preencherDataAtualNoFormulario() {
   const ano = hoje.getFullYear();
 
   form.data.value = `${dia}/${mes}/${ano}`;
-  atualizarFluxoGuiado();
 }
 
 function gerarIdAgendamento() {
@@ -234,9 +233,6 @@ function obterDadosBaseParaAgendamento() {
 }
 
 async function salvarAgendamentoLancamento() {
-  if (compraNoCartaoGuiada()) { setStatus('Use Salvar compra: as parcelas já serão distribuídas nas faturas.', true); return; }
-  const errosFluxo = validarFluxoGuiado();
-  if (errosFluxo.length) { setStatus(errosFluxo.join(' '), true); return; }
   if (salvandoAgendamento) return;
   const dataAgendada = calcularDataAgendada();
 
@@ -331,7 +327,6 @@ async function processarAgendamentosPendentes() {
 }
 
 function iniciarEdicaoLancamento(id) {
-  if (salvandoLancamentoGuiado) return;
   const lancamento = lancamentos.find(item => String(item.id) === String(id));
 
   if (!lancamento) {
@@ -444,10 +439,6 @@ async function carregarDados() {
 }
 
 async function salvarLancamento() {
-  if (salvandoLancamentoGuiado) return;
-  const errosFluxo = validarFluxoGuiado();
-  if (errosFluxo.length) { setStatus(errosFluxo.join(' '), true); return; }
-  if (compraNoCartaoGuiada()) { await salvarCompraGuiada(); return; }
 
   const novo = obterDadosFormulario();
   const erros = validarFormularioAvancado(novo);
@@ -457,7 +448,6 @@ async function salvarLancamento() {
     return;
   }
 
-  salvandoLancamentoGuiado = true; atualizarFluxoGuiado();
   try {
     if (lancamentoEmEdicaoId !== null) {
       setStatus('Atualizando lançamento...');
@@ -483,11 +473,10 @@ async function salvarLancamento() {
   } catch (error) {
     console.error(error);
     setStatus(`Erro ao salvar: ${error.message}`, true);
-  } finally { salvandoLancamentoGuiado = false; atualizarFluxoGuiado(); }
+  }
 }
 
 function resetarFormulario() {
-  if (salvandoLancamentoGuiado) return;
   if (lancamentoEmEdicaoId !== null) {
     cancelarEdicao();
     setStatus('Edição cancelada.');
@@ -533,8 +522,7 @@ async function ativarTab(tabId) {
   }
 
   if (tabId === 'gastosFixos' && typeof carregarGastosFixos === 'function') {
-    renderCartoes();
-    if (document.getElementById('contasAnteriores').open) await carregarGastosFixos();
+    await carregarGastosFixos();
   }
 }
 
@@ -640,8 +628,7 @@ if (typeof filtroOrigem !== 'undefined' && filtroOrigem) {
         return;
       }
 
-      const alvoExclusao = lancamentos.find(i => String(i.id) === String(id));
-      const confirmar = confirm(alvoExclusao?.cartao ? 'Excluir somente esta parcela/compra desta fatura? As outras parcelas serão mantidas.' : 'Deseja realmente excluir este lançamento?');
+      const confirmar = confirm('Deseja realmente excluir este lançamento?');
       if (!confirmar) return;
 
       try {

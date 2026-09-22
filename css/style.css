@@ -1321,3 +1321,6 @@ header p {
 
 /* Mantém o formulário e a lista de agendamentos acessíveis quando expandidos. */
 .novo-lancamento-hover:hover, .novo-lancamento-hover:focus-within, body.modo-edicao .novo-lancamento-hover { max-height: none; }
+
+/* Identificação de parcelas já existentes no histórico. */
+.lancamento-parcela { display:block; margin-top:4px; color:#2563eb; font-size:11px; }

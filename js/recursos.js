@@ -14,7 +14,7 @@ function aplicarRecursosUsuario() {
   }
   const toggle = document.getElementById('perfilVales');
   toggle.checked = ativo; toggle.disabled = !preferenciasProntas;
-  if(typeof atualizarFluxoGuiado==='function')atualizarFluxoGuiado();
+
 }
 document.getElementById('perfilVales').addEventListener('change', async event => {
   const el = event.target, anterior = valesAtivos(), proximo = el.checked;
@@ -33,7 +33,4 @@ document.getElementById('perfilVales').addEventListener('change', async event =>
     status.textContent = 'Preferência salva na sua conta.';
   } catch (e) { el.checked = anterior; status.textContent = 'Não foi possível salvar: ' + e.message; }
   finally { el.disabled = !preferenciasProntas; }
-});
-document.getElementById('contasAnteriores').addEventListener('toggle', event => {
-  if (event.target.open) carregarGastosFixos();
 });
