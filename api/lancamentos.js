@@ -1,3 +1,4 @@
+import comprasCartaoHandler from '../lib/compras-cartao.js';
 import { neon } from "@neondatabase/serverless";
 import { validarTokenSessao } from "../lib/conta.js";
 
@@ -70,6 +71,9 @@ function ajustarValorPorTipo(tipo, valor) {
 export default async function handler(req, res) {
     res.setHeader('Cache-Control', 'no-store');
     try {
+        if (req.method === 'POST' && req.body?.acao === 'compra-cartao') {
+            return await comprasCartaoHandler(req, res);
+        }
     const usuarioLogado = await obterUsuarioLogado(req);
         const usuarioId = usuarioLogado.id;
         if (['POST', 'PUT'].includes(req.method)) {

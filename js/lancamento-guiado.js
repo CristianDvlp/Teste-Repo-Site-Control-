@@ -109,7 +109,7 @@ async function salvarCompraGuiada() {
   const id=tentativaCompraGuiada.id;
   salvandoLancamentoGuiado=true;atualizarFluxoGuiado();
   try {
-    const r=await fetch('/api/compras-cartao',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({...dados,requisicaoId:id})});
+    const r=await fetch('/api/lancamentos',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({...dados,requisicaoId:id,acao:'compra-cartao'})});
     const resposta=await r.json();if(!r.ok)throw Error(resposta.erro||'Não foi possível salvar. Tente novamente.');
     limparFormularioSegura();preencherDataAtualNoFormulario();
     mesLancamentosSelecionado=dados.primeiraFatura.slice(5)+'/'+dados.primeiraFatura.slice(0,4);mesCartoes=mesLancamentosSelecionado;
