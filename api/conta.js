@@ -1,3 +1,4 @@
+import sugestoes from '../lib/sugestoes.js';
 import bcrypt from 'bcryptjs';
 import {sql,protegerPost,emailValido,senhaValida,limitarIP,limitar,exigirEmailConfigurado,enviarLink,responderErro,falha,sessao,conferirSenha,hashToken} from '../lib/conta.js';
 
@@ -20,6 +21,7 @@ export default async function handler(req,res) {
  try {
   protegerPost(req);
   const {acao}=req.body || {};
+  if (typeof acao==='string' && acao.startsWith('sugestoes-')) return await sugestoes(req,res);
   if (['app-carregar', 'app-salvar', 'app-importar'].includes(acao)) {
    const u = await sessao(req);
    if (acao !== 'app-carregar') {
@@ -42,7 +44,7 @@ export default async function handler(req,res) {
      EXISTS (SELECT 1 FROM lancamentos WHERE usuario_id = ${u.id} AND lower(trim(tipo)) IN ('vale','vales'))
      OR EXISTS (SELECT 1 FROM agendamentos WHERE usuario_id = ${u.id} AND lower(trim(tipo)) IN ('vale','vales')))
      WHERE id = ${u.id} AND NOT (COALESCE(preferencias_app, '{}'::jsonb) ? 'valesAtivos')`;
-   const [row] = await sql`SELECT preferencias_app FROM usuarios WHERE id = ${u.id}`;
+   const [row] = await sql`SELECT preferencias_app - 'sugestoes' AS preferencias_app FROM usuarios WHERE id = ${u.id}`;
    return res.status(200).json({ preferencias: row.preferencias_app || {} });
   }
   if(acao === 'preferencias-carregar' || acao === 'preferencias-salvar') {

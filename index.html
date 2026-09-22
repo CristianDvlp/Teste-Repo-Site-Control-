@@ -11,6 +11,7 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="stylesheet" href="css/metas.css?v=gastosfixos-restaurados" />
     <link rel="icon" type="image/png" href="./favicon.png" />
+  <link rel="stylesheet" href="css/sugestoes.css?v=1">
   </head>
 
   <body>
@@ -58,6 +59,9 @@
         <button class="sidebar-link" type="button" data-tab-target="metas">
           <span class="sidebar-icon">🎯</span>
           <span class="sidebar-text">Metas anuais e mensais</span>
+        </button>
+        <button class="sugestoes-acesso" id="abrirSugestoes" type="button" aria-haspopup="dialog" aria-controls="sugestoesDialog" title="Sugerir melhoria">
+          <span class="sidebar-icon" aria-hidden="true">💡</span><span class="sidebar-text">Sugerir melhoria</span>
         </button>
       </nav>
       <div class="usuario-menu-wrap perfil-sidebar">
@@ -119,6 +123,7 @@
           </div>
 
           <div class="header-user-area">
+            <button id="abrirSugestoesTopo" class="sugestoes-botao-topo" type="button" aria-haspopup="dialog" aria-controls="sugestoesDialog">💡 Sugerir melhoria</button>
             <div
               id="solicitacoesWrap"
               class="solicitacoes-wrap"
@@ -1060,5 +1065,33 @@
 
     <script src="js/melhorias-senha.js?v=gastosfixos-restaurados"></script>
     <script src="js/dashboards-personalizados.js?v=gastosfixos-restaurados"></script>
+    <dialog id="sugestoesDialog" class="sugestoes-dialog" aria-labelledby="sugestoesTitulo">
+      <div class="sugestoes-cabecalho"><div><p class="sugestoes-legenda">Ajude a melhorar o site</p><h2 id="sugestoesTitulo">Sua ideia faz diferença</h2></div><button type="button" id="fecharSugestoes" aria-label="Fechar sugestões">×</button></div>
+      <div class="sugestoes-abas" aria-label="Seções de sugestões">
+        <button type="button" id="sugestoesAbaEnviar" aria-pressed="true">Enviar sugestão</button>
+        <button type="button" id="sugestoesAbaMinhas" aria-pressed="false">Minhas sugestões</button>
+        <button type="button" id="sugestoesAbaAdmin" aria-pressed="false" hidden>Gerenciar sugestões</button>
+      </div>
+      <section id="sugestoesEnvio">
+        <p class="sugestoes-intro">Conte o que poderia funcionar melhor. Seu nome e a data serão registrados automaticamente. Somente você e os administradores poderão ver sua sugestão.</p>
+        <form id="sugestoesForm" class="sugestoes-form">
+          <label class="sugestoes-linha">Título *<input name="titulo" required minlength="5" maxlength="100" placeholder="Ex.: filtrar gastos por período"></label>
+          <label>Tipo *<select name="tipo" required><option value="">Selecione</option><option value="melhoria">Melhorar algo existente</option><option value="recurso">Novo recurso</option><option value="problema">Relatar um problema</option></select></label>
+          <label>Área do site *<select name="area" required><option value="">Selecione</option><option>Lançamentos</option><option>Gastos fixos</option><option>Dashboards</option><option>Metas</option><option>Perfil e acesso</option><option>Outro</option></select></label>
+          <label class="sugestoes-linha">Impacto no uso *<select name="impacto" required><option value="">Selecione</option><option value="baixo">Baixo — seria uma facilidade</option><option value="medio">Médio — dificulta meu dia a dia</option><option value="alto">Alto — impede uma tarefa importante</option></select></label>
+          <label class="sugestoes-linha"><span id="sugestoesDescricaoLabel">O que você sugere? *</span><textarea name="descricao" required minlength="15" maxlength="2000" rows="4" placeholder="Descreva a ideia e dê um exemplo de uso."></textarea></label>
+          <label class="sugestoes-linha">Qual resultado você espera? *<textarea name="beneficio" required minlength="5" maxlength="1000" rows="3" placeholder="Explique como isso ajudaria ou o que deveria acontecer."></textarea></label>
+          <p class="sugestoes-nota sugestoes-linha">* Campos obrigatórios. Não inclua senhas, dados de cartão ou informações financeiras pessoais.</p>
+          <div class="sugestoes-linha sugestoes-acoes"><button type="submit" id="enviarSugestao" class="btn-primary">Enviar sugestão</button></div>
+        </form>
+      </section>
+      <section id="sugestoesAcompanhamento" hidden>
+        <div class="sugestoes-filtros"><label>Situação<select id="sugestoesFiltro"><option value="">Todas</option><option value="nova">Nova</option><option value="em_analise">Em análise</option><option value="planejada">Planejada</option><option value="concluida">Concluída</option><option value="nao_prevista">Não prevista</option></select></label><button type="button" id="recarregarSugestoes">Atualizar</button></div>
+        <div id="sugestoesLista"></div>
+        <div class="sugestoes-paginacao"><button type="button" id="sugestoesAnterior">← Anterior</button><span id="sugestoesPagina"></span><button type="button" id="sugestoesProxima">Próxima →</button></div>
+      </section>
+      <p id="sugestoesStatus" role="status" aria-live="polite"></p>
+    </dialog>
+    <script src="js/sugestoes.js?v=1"></script>
   </body>
 </html>
