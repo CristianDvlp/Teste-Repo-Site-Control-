@@ -96,7 +96,8 @@ const origensManuais = ['site', 'planilha', 'manual'];
 const okOrigem =
   !origemSelecionada ||
   (origemSelecionada === 'manual' && origensManuais.includes(origemItem)) ||
-  (origemSelecionada === 'gasto_fixo' && origemItem === 'gasto_fixo');
+  (origemSelecionada === 'gasto_fixo' && origemItem === 'gasto_fixo') ||
+  (origemSelecionada === 'cartao' && origemItem === 'cartao');
 
     return lancamentoVisivel(item) && okTipo && okCategoria && okOrigem;
   });
@@ -131,6 +132,7 @@ function renderTabela(lancamentos) {
       const identificador = item.id ?? item.ID ?? item.Id ?? item.indice ?? '';
       const tipo = formatarTipoVisual(obterTipoLancamento(item));
       const descricao = formatarTextoPadrao(item.descricao);
+      const detalheCartao = item.cartao ? `<small class="lancamento-parcela">${item.cartao.total>1 ? 'Parcela '+Number(item.cartao.numero)+'/'+Number(item.cartao.total) : 'À vista no cartão'}</small>` : '';
       const categoria = formatarTextoPadrao(item.categoria);
       const pagamento = formatarTextoPadrao(item.pagamento);
       const estaEditando = typeof lancamentoEmEdicaoId !== 'undefined' &&
@@ -149,7 +151,7 @@ function renderTabela(lancamentos) {
       tr.innerHTML = `
         <td>${formatarDataParaTela(item.data)}</td>
         <td>${tipo}</td>
-        <td>${descricao}</td>
+        <td>${descricao}${detalheCartao}</td>
         <td>${categoria}</td>
         <td>${formatarMoeda(obterValorAbsoluto(item))}</td>
         <td>${pagamento}</td>

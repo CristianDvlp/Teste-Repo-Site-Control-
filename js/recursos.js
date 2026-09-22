@@ -10,10 +10,11 @@ function aplicarRecursosUsuario() {
   });
   for (const id of ['tipo', 'filtroTipo']) {
     const el = document.getElementById(id);
-    if (!ativo && el?.value === 'Vales') el.value = id === 'tipo' ? 'Receita' : 'Todos';
+    if (!ativo && el?.value === 'Vales') el.value = id === 'tipo' ? '' : 'Todos';
   }
   const toggle = document.getElementById('perfilVales');
   toggle.checked = ativo; toggle.disabled = !preferenciasProntas;
+  if(typeof atualizarFluxoGuiado==='function')atualizarFluxoGuiado();
 }
 document.getElementById('perfilVales').addEventListener('change', async event => {
   const el = event.target, anterior = valesAtivos(), proximo = el.checked;

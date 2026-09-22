@@ -5,12 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Teste - Controle Financeiro</title>
 
-    <link rel="stylesheet" href="css/style.css?v=cartoes1" />
-    <link rel="stylesheet" href="css/perfil.css?v=cartoes1" />
-    <link rel="stylesheet" href="css/conta.css?v=cartoes1" />
+    <link rel="stylesheet" href="css/style.css?v=fluxo2" />
+    <link rel="stylesheet" href="css/perfil.css?v=fluxo2" />
+    <link rel="stylesheet" href="css/conta.css?v=fluxo2" />
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <link rel="stylesheet" href="css/metas.css?v=cartoes1" />
+    <link rel="stylesheet" href="css/metas.css?v=fluxo2" />
     <link rel="icon" type="image/png" href="./favicon.png" />
+  <link rel="stylesheet" href="css/cartoes.css?v=fluxo2">
   </head>
 
   <body>
@@ -318,86 +319,25 @@
 
             <div class="novo-lancamento-hover__conteudo">
               <div class="info">
-                O lançamento possui estes campos:
-                <strong
-                  >Data, Tipo, Descrição, Categoria, Valor e Tipo de
-                  Pagamento</strong
-                >. <span data-texto-vales="Registre suas receitas, despesas e vales de forma simples." data-texto-sem-vales="Registre suas receitas e despesas de forma simples.">Registre suas receitas e despesas de forma simples.</span>
+                Preencha na ordem: cada etapa libera a próxima. <span data-texto-vales="Registre suas receitas, despesas e vales de forma simples." data-texto-sem-vales="Registre suas receitas e despesas de forma simples.">Registre suas receitas e despesas de forma simples.</span>
               </div>
 
-              <form id="financeForm" class="form-grid">
-                <label for="data">
-                  <span id="dataLabelText">Data</span>
-                  <input
-                    type="text"
-                    id="data"
-                    name="data"
-                    inputmode="numeric"
-                    maxlength="10"
-                    autocomplete="off"
-                    required
-                  />
-                </label>
-
-                <label for="tipo">
-                  <span>Tipo</span>
-                  <select id="tipo" name="tipo" required>
-                    <option value="Receita">Receita</option>
-                    <option value="Despesa">Despesa</option>
-                    <option data-recurso-vales value="Vales">Vales</option>
-                  </select>
-                </label>
-
-                <label for="descricao">
-                  <span>Descrição</span>
-                  <input
-                    type="text"
-                    id="descricao"
-                    name="descricao"
-                    placeholder="Digite a descrição"
-                    autocomplete="off"
-                  />
-                </label>
-
-                <label for="categoria">
-                  <span>Categoria</span>
-                  <input
-                    type="text"
-                    id="categoria"
-                    name="categoria"
-                    list="categoriaSugestoes"
-                    placeholder="Digite ou selecione uma categoria"
-                    autocomplete="off"
-                    required
-                  />
-                  <datalist id="categoriaSugestoes"></datalist>
-                </label>
-
-                <label for="valor">
-                  <span id="valorLabelText">Valor</span>
-                  <input
-                    type="text"
-                    id="valor"
-                    name="valor"
-                    inputmode="decimal"
-                    placeholder="R$ 0,00"
-                    autocomplete="off"
-                    required
-                  />
-                </label>
-
-                <label for="pagamento">
-                  <span>Tipo de pagamento</span>
-                  <select id="pagamento" name="pagamento" required>
-                    <option value="">Selecione</option>
-                    <option value="PIX">Pix</option>
-                    <option value="DEBITO">Debito</option>
-                    <option value="DINHEIRO">Dinheiro</option>
-                    <option value="CREDITO">Credito</option>
-                    <option value="CARTÃO A">Cartão A</option>
-                    <option value="Cartão P">Cartão P</option>
-                  </select>
-                </label>
+              <p id="fluxoOrientacao" class="fluxo-orientacao" role="status">Comece escolhendo o tipo de lançamento.</p>
+              <form id="financeForm" class="form-grid fluxo-form" novalidate>
+                <label for="tipo"><span>1. Tipo</span><select id="tipo" name="tipo" required>
+                  <option value="">Selecione o tipo</option><option value="Receita">Receita</option><option value="Despesa">Despesa</option><option data-recurso-vales value="Vales">Vales</option>
+                </select></label>
+                <label for="data"><span id="dataLabelText">Data</span><input id="data" name="data" type="text" inputmode="numeric" maxlength="10" autocomplete="off" placeholder="dd/mm/aaaa" required disabled></label>
+                <label for="compraCartao" hidden><span>Foi no cartão de crédito?</span><select id="compraCartao" disabled><option value="">Selecione</option><option value="sim">Sim, no cartão</option><option value="nao">Não</option></select></label>
+                <label for="modalidadeCompra" hidden><span>Como foi a compra?</span><select id="modalidadeCompra" disabled><option value="">Selecione</option><option value="avista">À vista no cartão</option><option value="parcelada">Parcelada</option></select></label>
+                <label for="cartaoCompra" hidden><span>Qual cartão?</span><select id="cartaoCompra" disabled><option value="">Selecione um cartão</option></select><button id="cadastrarCartaoNoFluxo" type="button" class="fluxo-link">+ Cadastrar cartão</button></label>
+                <label for="descricao"><span>Descrição</span><input id="descricao" name="descricao" type="text" maxlength="200" placeholder="Ex.: compra no mercado" autocomplete="off" required disabled></label>
+                <label for="categoria"><span>Categoria</span><input id="categoria" name="categoria" type="text" list="categoriaSugestoes" maxlength="200" placeholder="Ex.: Alimentação" autocomplete="off" required disabled><datalist id="categoriaSugestoes"></datalist></label>
+                <label for="valor"><span id="valorLabelText">Valor</span><input id="valor" name="valor" type="text" inputmode="decimal" placeholder="R$ 0,00" autocomplete="off" required disabled><small id="ajudaValorCompra" hidden>Informe o total final, incluindo juros, se houver.</small></label>
+                <label for="quantidadeParcelas" hidden><span>Em quantas vezes?</span><input id="quantidadeParcelas" type="number" inputmode="numeric" min="2" max="120" placeholder="Ex.: 6" disabled></label>
+                <label for="primeiraFatura" hidden><span id="primeiraFaturaLabel">Primeira fatura</span><input id="primeiraFatura" type="month" disabled><small>Confira o mês na fatura do banco. Você pode ajustá-lo.</small></label>
+                <label for="pagamento"><span>Forma de pagamento</span><select id="pagamento" name="pagamento" required disabled><option value="">Selecione</option></select></label>
+                <aside id="previaCompra" class="previa-compra" hidden aria-label="Prévia da compra"></aside>
               </form>
 
               <div class="actions">
@@ -1052,22 +992,24 @@
       </div>
     </div>
 
-    <script src="js/utils.js?v=cartoes1"></script>
-    <script src="js/api.js?v=cartoes1"></script>
-    <script src="js/form.js?v=cartoes1"></script>
-    <script src="js/ui.js?v=cartoes1"></script>
-    <script src="js/charts.js?v=cartoes1"></script>
-    <script src="js/metas.js?v=cartoes1"></script>
-    <script src="js/gastos-fixos.js?v=cartoes1"></script>
-    <script src="js/preferencias-banco.js?v=cartoes1"></script>
-    <script src="js/recursos.js?v=cartoes1"></script>
-    <script src="js/cartoes.js?v=cartoes1"></script>
-    <script src="js/main.js?v=cartoes1"></script>
-    <script src="js/auth.js?v=cartoes1"></script>
-    <script src="js/perfil.js?v=cartoes1"></script>
-    <script src="js/conta-ui.js?v=cartoes1"></script>
+    <script src="js/utils.js?v=fluxo2"></script>
+    <script src="js/api.js?v=fluxo2"></script>
+    <script src="js/form.js?v=fluxo2"></script>
+    <script src="js/ui.js?v=fluxo2"></script>
+    <script src="js/charts.js?v=fluxo2"></script>
+    <script src="js/metas.js?v=fluxo2"></script>
+    <script src="js/gastos-fixos.js?v=fluxo2"></script>
+    <script src="js/preferencias-banco.js?v=fluxo2"></script>
+    <script src="js/recursos.js?v=fluxo2"></script>
+    <script src="js/cartoes.js?v=fluxo2"></script>
+    <script type="module" src="js/cartao-calculos.js?v=fluxo2"></script>
+    <script src="js/lancamento-guiado.js?v=fluxo2"></script>
+    <script src="js/main.js?v=fluxo2"></script>
+    <script src="js/auth.js?v=fluxo2"></script>
+    <script src="js/perfil.js?v=fluxo2"></script>
+    <script src="js/conta-ui.js?v=fluxo2"></script>
 
-    <script src="js/melhorias-senha.js?v=cartoes1"></script>
-    <script src="js/dashboards-personalizados.js?v=cartoes1"></script>
+    <script src="js/melhorias-senha.js?v=fluxo2"></script>
+    <script src="js/dashboards-personalizados.js?v=fluxo2"></script>
   </body>
 </html>

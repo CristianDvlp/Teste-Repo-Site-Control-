@@ -205,7 +205,8 @@ function normalizarLancamento(item, indice = 0) {
     categoria: item.categoria ?? item.Categoria ?? '',
     valor: item.valor ?? item.Valor ?? 0,
     pagamento: item.pagamento ?? item.Pagamento ?? item.FormaPagamento ?? item['Tipo de Pagamento'] ?? '',
-    origem: item.origem ?? item.Origem ?? item.ORIGEM ?? 'site'
+    origem: item.origem ?? item.Origem ?? item.ORIGEM ?? 'site',
+    cartao: item.cartao || null
   };
 }
 

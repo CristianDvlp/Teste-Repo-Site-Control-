@@ -7,6 +7,7 @@ function validarCartoes(valor) {
  return valor.every(c => {
   if (!c || typeof c.id !== 'string' || !/^[a-zA-Z0-9-]{1,60}$/.test(c.id) || ids.has(c.id)) return false;
   if (![c.nome,c.pagamento].every(v=>typeof v==='string' && v.trim().length>0 && v.length<=80) || formas.has(c.pagamento)) return false;
+  if (c.fechamento != null && (!Number.isInteger(c.fechamento) || c.fechamento<1 || c.fechamento>31)) return false;
   if (!Number.isInteger(c.vencimento) || c.vencimento<1 || c.vencimento>31) return false;
   if (!c.quitacoes || typeof c.quitacoes !== 'object' || Array.isArray(c.quitacoes) || Object.keys(c.quitacoes).length>1200) return false;
   if (!Object.entries(c.quitacoes).every(([mes,q])=>/^(0[1-9]|1[0-2])\/\d{4}$/.test(mes) && q && typeof q.assinatura==='string' && q.assinatura.length<=100000 && typeof q.data==='string' && /^\d{2}\/\d{2}\/\d{4}$/.test(q.data))) return false;

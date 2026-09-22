@@ -88,13 +88,19 @@ export default async function handler(req, res) {
                     REPLACE(valor::text, '.', ',') AS valor,
                     pagamento AS "FormaPagamento",
 
-                    origem
+                    origem, import_hash
                 FROM lancamentos
                 WHERE usuario_id = ${usuarioId}
                 ORDER BY data DESC, id DESC
             `;
 
-            return res.status(200).json(lancamentos);
+            const [conta] = await sql`SELECT preferencias_app->'comprasCartao' AS compras FROM usuarios WHERE id=${usuarioId}`;
+            const vinculos = new Map();
+            for (const c of Object.values(conta?.compras || {})) {
+                if (!Array.isArray(c?.hashes)) continue;
+                c.hashes.forEach((hash,i)=>vinculos.set(hash,{cartaoId:c.cartaoId,compraId:c.compraId,numero:i+1,total:c.total,dataCompra:c.dataCompra}));
+            }
+            return res.status(200).json(lancamentos.map(({import_hash,...item})=>({...item,cartao:vinculos.get(import_hash)||null})));
         }
 
         if (req.method === "POST") {
@@ -143,6 +149,9 @@ export default async function handler(req, res) {
                 return res.status(400).json({ erro: "Preencha data, tipo, categoria, valor e pagamento" });
             }
 
+            const [original] = await sql`SELECT tipo,pagamento,origem FROM lancamentos WHERE id=${id} AND usuario_id=${usuarioId}`;
+            if (!original) return res.status(404).json({erro:'Lançamento não encontrado.'});
+            if (original.origem === 'cartao' && (tipo !== 'Despesa' || String(pagamentoFinal).normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase() !== String(original.pagamento).normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase())) return res.status(400).json({erro:'O tipo e o cartão de uma parcela não podem ser trocados. Edite apenas o valor, data, descrição ou categoria.'});
             valorBanco = ajustarValorPorTipo(tipo, valorBanco);
 
             const atualizado = await sql`

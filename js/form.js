@@ -174,6 +174,7 @@ function inicializarFormulario(lancamentos = []) {
   configurarCampoValor();
   atualizarSugestoesCategoria(lancamentos.filter(lancamentoVisivel));
   atualizarPagamentosCartoes();
+  inicializarLancamentoGuiado();
 }
 
 function preencherFormularioParaEdicao(lancamento) {
@@ -188,6 +189,7 @@ function preencherFormularioParaEdicao(lancamento) {
   form.categoria.value = lancamento.categoria || '';
   form.valor.value = formatarMoeda(obterValorAbsoluto(lancamento));
   form.pagamento.value = normalizarPagamento(lancamento.pagamento || '');
+  prepararEdicaoGuiada(lancamento);
 }
 
 function normalizarTextoSemAcento(texto) {
@@ -258,10 +260,11 @@ function limparFormulario() {
   if (form.data) form.data.value = '';
   if (form.tipo) {
     form.tipo.disabled = false;
-    form.tipo.value = 'Receita';
+    form.tipo.value = '';
   }
   if (form.descricao) form.descricao.value = '';
   if (form.categoria) form.categoria.value = '';
   if (form.valor) form.valor.value = '';
   if (form.pagamento) form.pagamento.value = '';
+  resetarFluxoGuiado();
 }
